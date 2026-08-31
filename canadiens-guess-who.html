@@ -267,6 +267,7 @@
     color:#fff;
     display:flex;align-items:center;justify-content:center;
     font-weight:800;font-size:14px;
+    overflow:hidden;
   }
   .cnum{
     position:absolute;
@@ -413,6 +414,15 @@
 
   /* ---------- Solo silhouette ---------- */
   .silhouettewrap{padding:20px 16px 0;}
+  .imgtoggle{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:14px 16px 0;
+    font-size:13px;
+    color:var(--texte-att);
+  }
+  .imgtoggle input{accent-color:var(--rouge);width:16px;height:16px;}
   .silhouettecard{
     max-width:220px;
     margin:0 auto;
@@ -611,7 +621,11 @@
   </div>
 
   <div id="soloMode" style="display:none;">
-    <div class="silhouettewrap">
+    <label class="imgtoggle">
+      <input type="checkbox" id="soloImgToggle" checked>
+      <span>Afficher l'image et les lettres</span>
+    </label>
+    <div class="silhouettewrap" id="silhouettewrap">
       <div class="silhouettecard" id="soloCard">
         <span class="era" id="soloEra">Actif</span>
         <span class="continent-badge" id="soloContinent">Amérique du Nord</span>
@@ -877,6 +891,23 @@ const QUESTION_POOL = [
 ];
 let QUESTIONS = [];
 
+// Fixes the iOS Safari quirk where the first tap on a button just dismisses
+// the keyboard (from a focused input) instead of firing the click.
+function bindTap(el, handler){
+  if(!el) return;
+  let handledByTouch = false;
+  el.addEventListener('touchend', function(e){
+    handledByTouch = true;
+    e.preventDefault();
+    handler(e);
+    setTimeout(()=>{ handledByTouch = false; }, 400);
+  }, {passive:false});
+  el.addEventListener('click', function(e){
+    if(handledByTouch) return;
+    handler(e);
+  });
+}
+
 function shuffle(arr){
   const a = arr.slice();
   for(let i=a.length-1;i>0;i--){
@@ -929,6 +960,15 @@ function initials(name){
   return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
 }
 
+// Uses p.photo (a URL) if the player data provides one; falls back to the
+// colored initials avatar otherwise. See content.json for how to add photos.
+function avatarInner(p){
+  if(p.photo){
+    return `<img src="${p.photo}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.parentElement.textContent='${initials(p.name)}';">`;
+  }
+  return initials(p.name);
+}
+
 function renderRoster(){
   gridEl.innerHTML = '';
   guessSelect.innerHTML = '<option value="">Faire une supposition…</option>';
@@ -940,7 +980,7 @@ function renderRoster(){
         <div class="front" data-id="${p.id}">
           <span class="era ${p.active?'actif':'legende'}">${p.active?'Actif':'Légende'}</span>
           <span class="cnum">${p.num}</span>
-          <div class="avatar">${initials(p.name)}</div>
+          <div class="avatar">${avatarInner(p)}</div>
           <div>
             <div class="cname">${p.name}</div>
             <div class="cpos">${p.posLabel}</div>
@@ -1010,7 +1050,7 @@ function updateHintButton(){
   }
 }
 
-hintBtn.addEventListener('click', ()=>{
+bindTap(hintBtn, ()=>{
   if(hintsLeft > 0){
     hintsLeft--;
   } else {
@@ -1021,7 +1061,7 @@ hintBtn.addEventListener('click', ()=>{
   updateHintButton();
 });
 
-document.getElementById('guessBtn').addEventListener('click', ()=>{
+bindTap(document.getElementById('guessBtn'), ()=>{
   const val = guessSelect.value;
   if(!val){
     answerbox.innerHTML = `<span style="color:#F5C6CB;">Choisis d'abord un joueur dans la liste déroulante.</span>`;
@@ -1042,7 +1082,7 @@ function showResult(win, who, mode){
   const tag = document.getElementById('resultTag');
   tag.textContent = win ? 'GAGNÉ' : 'RATÉ';
   tag.className = 'result-tag ' + (win?'win':'lose');
-  document.getElementById('revealAvatar').textContent = initials(player.name);
+  document.getElementById('revealAvatar').innerHTML = avatarInner(player);
   document.getElementById('revealName').textContent = `#${player.num} ${player.name}`;
   document.getElementById('revealSub').textContent = win
     ? `Bien joué — c'était bien lui.`
@@ -1117,6 +1157,18 @@ const soloEraEl = document.getElementById('soloEra');
 const soloContinentEl = document.getElementById('soloContinent');
 const soloPosEl = document.getElementById('soloPos');
 const soloScrambleWrap = document.getElementById('soloScrambleWrap');
+const silhouettewrapEl = document.getElementById('silhouettewrap');
+const soloImgToggle = document.getElementById('soloImgToggle');
+let soloShowImage = true;
+
+soloImgToggle.addEventListener('change', ()=>{
+  soloShowImage = soloImgToggle.checked;
+  applySoloImageVisibility();
+});
+
+function applySoloImageVisibility(){
+  silhouettewrapEl.style.display = soloShowImage ? '' : 'none';
+}
 const soloBoxesEl = document.getElementById('soloBoxes');
 const soloPoolEl = document.getElementById('soloPool');
 const soloTriesEl = document.getElementById('soloTries');
@@ -1231,6 +1283,7 @@ function newSoloGame(){
   soloNumEl.style.filter = `blur(${cfg.blurStart}px)`;
   soloCardEl.className = 'silhouettecard ' + (POS_GROUP_CLASS[soloSecret.pos] || '');
   buildSoloLetterPuzzle();
+  applySoloImageVisibility();
 
   if(cfg.revealBadgesFromStart){
     soloEraEl.style.visibility = 'visible';
@@ -1303,7 +1356,7 @@ function soloGuess(){
   const cupsCmp = arrowCompare(found.cups, soloSecret.cups);
   row.innerHTML = `
     <div class="guesscard-head">
-      <div class="avatar">${initials(found.name)}</div>
+      <div class="avatar">${avatarInner(found)}</div>
       <span class="guesscard-name">${found.name}</span>
       ${win ? '<span class="wintag">✓ Trouvé</span>' : ''}
     </div>
@@ -1338,7 +1391,7 @@ function soloGuess(){
   }
 }
 
-document.getElementById('soloGuessBtn').addEventListener('click', soloGuess);
+bindTap(document.getElementById('soloGuessBtn'), soloGuess);
 soloInput.addEventListener('keydown', e=>{ if(e.key==='Enter') soloGuess(); });
 document.getElementById('newSoloBtn').addEventListener('click', newSoloGame);
 
@@ -1354,7 +1407,7 @@ function updateSoloHintButton(){
   }
 }
 
-soloHintBtn.addEventListener('click', ()=>{
+bindTap(soloHintBtn, ()=>{
   if(soloHintsLeft > 0){
     soloHintsLeft--;
   } else {
@@ -1586,7 +1639,7 @@ function askMultiQuestion(idx, q){
   fbDb.ref('rooms/' + myRoomCode + '/turn').set(oppRole);
 }
 
-document.getElementById('multiGuessBtn').addEventListener('click', ()=>{
+bindTap(document.getElementById('multiGuessBtn'), ()=>{
   if(!roomData || roomData.turn !== myRole) return;
   const val = multiGuessSelect.value;
   if(!val) return;
