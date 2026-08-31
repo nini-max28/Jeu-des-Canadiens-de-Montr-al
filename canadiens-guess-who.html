@@ -236,11 +236,9 @@
     position:absolute;inset:0;
     backface-visibility:hidden;
     border-radius:12px;
-    display:flex;flex-direction:column;
-    justify-content:space-between;
-    padding:10px;
     cursor:pointer;
     user-select:none;
+    overflow:hidden;
   }
   .front{
     background:var(--acier-clair);
@@ -252,13 +250,25 @@
   .back{
     background:repeating-linear-gradient(45deg, #171C29, #171C29 8px, #1D2434 8px, #1D2434 16px);
     transform:rotateY(180deg);
-    align-items:center;
-    justify-content:center;
+    display:flex;align-items:center;justify-content:center;
   }
   .back span{
     font-size:11px;
     color:#5C6785;
     letter-spacing:.03em;
+  }
+  .cardbg{
+    position:absolute;inset:0;
+    background:linear-gradient(160deg, var(--rouge), var(--rouge-fonce));
+    display:flex;align-items:center;justify-content:center;
+  }
+  .cardbg svg, .cardbg img{width:100%;height:100%;}
+  .cardscrim{
+    position:absolute;left:0;right:0;bottom:0;top:38%;
+    background:linear-gradient(180deg, transparent, rgba(10,13,22,0.9) 68%);
+  }
+  .cardtext{
+    position:absolute;left:10px;right:10px;bottom:9px;
   }
   .avatar{
     width:64px;height:64px;
@@ -272,9 +282,12 @@
   .cnum{
     position:absolute;
     top:8px;right:10px;
-    font-size:20px;
+    font-size:16px;
     font-weight:900;
-    color:#414C68;
+    color:#fff;
+    background:rgba(10,13,22,0.55);
+    padding:2px 8px;
+    border-radius:6px;
   }
   .cname{
     font-size:13px;
@@ -1084,10 +1097,11 @@ function renderRoster(){
     card.innerHTML = `
       <div class="cardface">
         <div class="front" data-id="${p.id}">
+          <div class="cardbg">${avatarInner(p)}</div>
+          <div class="cardscrim"></div>
           <span class="era ${p.active?'actif':'legende'}">${p.active?'Actif':'Légende'}</span>
           <span class="cnum">${p.num}</span>
-          <div class="avatar">${avatarInner(p)}</div>
-          <div>
+          <div class="cardtext">
             <div class="cname">${p.name}</div>
             <div class="cpos">${p.posLabel}</div>
           </div>
