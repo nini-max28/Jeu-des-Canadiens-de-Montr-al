@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 <title>Qui est-ce — Tricolore</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <style>
   :root{
     --rouge: #AF1E2D;
@@ -379,8 +381,8 @@
     color:var(--texte-att);
     border:none;
     border-radius:10px;
-    padding:11px 10px;
-    font-size:13.5px;
+    padding:11px 6px;
+    font-size:12px;
     font-weight:700;
     cursor:pointer;
   }
@@ -399,6 +401,15 @@
     border:1px solid rgba(201,162,75,0.35);
   }
   .coinpill b{color:var(--or);}
+
+  .roomcode{
+    font-family:"Arial Narrow",Arial,sans-serif;
+    font-size:48px;
+    font-weight:900;
+    letter-spacing:.12em;
+    color:var(--or);
+    margin:12px 0 0;
+  }
 
   /* ---------- Solo silhouette ---------- */
   .silhouettewrap{padding:20px 16px 0;}
@@ -520,6 +531,7 @@
   <div class="tabs">
     <button class="tabbtn active" id="tabDuel">Face à face</button>
     <button class="tabbtn" id="tabSolo">Solo — Silhouette</button>
+    <button class="tabbtn" id="tabMulti">En ligne</button>
   </div>
 
   <div class="coinbar">
@@ -598,6 +610,73 @@
 
       <div id="soloGuesses" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;"></div>
     </section>
+  </div>
+
+  <div id="multiMode" style="display:none;">
+    <div id="multiNoConfig" class="panel" style="display:none;margin:22px 16px 0;">
+      <h2>Configuration requise</h2>
+      <p class="sub">Le mode en ligne a besoin d'un projet Firebase gratuit pour synchroniser les deux appareils. Une fois configuré (voir les instructions fournies), remplis <code>FIREBASE_CONFIG</code> dans le fichier et republie-le.</p>
+    </div>
+
+    <div id="multiLobby">
+      <section class="panel">
+        <h2>Jouer en ligne</h2>
+        <p class="sub">Un appareil crée la partie, l'autre entre le code pour la rejoindre. Chacun reçoit un joueur secret différent, que l'autre doit deviner.</p>
+        <input id="multiName" placeholder="Ton prénom" autocomplete="off"
+          style="width:100%;background:var(--acier);color:var(--texte);border:1px solid #333C54;border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:10px;">
+        <button class="btn btn-primary" id="multiCreateBtn" style="width:100%;margin-bottom:14px;">Créer une partie</button>
+
+        <div class="centerline" style="max-width:100%;margin:6px 0 14px;"></div>
+
+        <div style="display:flex;gap:8px;">
+          <input id="multiJoinCode" placeholder="Code à 4 lettres" autocomplete="off" maxlength="4"
+            style="flex:1;text-transform:uppercase;background:var(--acier);color:var(--texte);border:1px solid #333C54;border-radius:8px;padding:10px 12px;font-size:14px;">
+          <button class="btn btn-primary" id="multiJoinBtn">Rejoindre</button>
+        </div>
+        <p id="multiLobbyError" style="display:none;color:#F5C6CB;font-size:12.5px;margin:10px 0 0;"></p>
+      </section>
+    </div>
+
+    <div id="multiWaiting" style="display:none;">
+      <section class="panel" style="text-align:center;">
+        <h2>En attente d'un adversaire…</h2>
+        <p class="sub">Partage ce code avec l'autre joueur :</p>
+        <div class="roomcode" id="multiRoomCode">----</div>
+        <button class="btn btn-ghost" id="multiCancelBtn" style="margin-top:16px;">Annuler</button>
+      </section>
+    </div>
+
+    <div id="multiPlay" style="display:none;">
+      <div class="statusbar">
+        <div class="pill" id="multiTurnPill">C'est ton tour</div>
+        <button class="btn btn-ghost" id="multiLeaveBtn">Quitter</button>
+      </div>
+
+      <section class="panel">
+        <h2>Ton identité secrète</h2>
+        <p class="sub" id="multiMySecret">—</p>
+        <p class="sub">L'adversaire doit deviner qui tu es. Toi, devine le sien.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Pose une question sur l'adversaire</h2>
+        <div class="qgrid" id="multiQgrid"></div>
+        <div class="answerbox" id="multiAnswerbox"><span style="color:#8891A8;">En attente…</span></div>
+        <button class="log-toggle" id="multiLogToggle">Voir l'historique ▾</button>
+        <div class="log" id="multiLog"></div>
+      </section>
+
+      <div class="rostertitle">
+        <h2>Devine l'adversaire</h2>
+        <span>Choisis dans la liste puis confirme</span>
+      </div>
+      <div style="padding:0 16px;display:flex;gap:8px;">
+        <select id="multiGuessSelect" style="flex:1;background:var(--acier-clair);color:var(--texte);border:1px solid #333C54;border-radius:8px;padding:10px 12px;font-size:14px;">
+          <option value="">Faire une supposition…</option>
+        </select>
+        <button class="btn btn-primary" id="multiGuessBtn">Deviner</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -930,7 +1009,9 @@ function showResult(win, who, mode){
 
 document.getElementById('playAgainBtn').addEventListener('click', ()=>{
   document.getElementById('overlay').classList.remove('show');
-  if(lastResultMode === 'solo') newSoloGame(); else newGame();
+  if(lastResultMode === 'solo') newSoloGame();
+  else if(lastResultMode === 'multi'){ if(roomRef) roomRef.remove(); leaveMultiRoom(); }
+  else newGame();
 });
 document.getElementById('newGameBtn').addEventListener('click', newGame);
 
@@ -953,21 +1034,26 @@ function newGame(){
 /* ---------- Mode tabs ---------- */
 const tabDuel = document.getElementById('tabDuel');
 const tabSolo = document.getElementById('tabSolo');
+const tabMulti = document.getElementById('tabMulti');
 const duelMode = document.getElementById('duelMode');
 const soloModeEl = document.getElementById('soloMode');
+const multiModeEl = document.getElementById('multiMode');
 const duelGuessbar = document.getElementById('duelGuessbar');
 
 tabDuel.addEventListener('click', ()=>switchTab('duel'));
 tabSolo.addEventListener('click', ()=>switchTab('solo'));
+tabMulti.addEventListener('click', ()=>switchTab('multi'));
 
 function switchTab(mode){
-  const isDuel = mode === 'duel';
-  tabDuel.classList.toggle('active', isDuel);
-  tabSolo.classList.toggle('active', !isDuel);
-  duelMode.style.display = isDuel ? '' : 'none';
-  soloModeEl.style.display = isDuel ? 'none' : '';
-  duelGuessbar.style.display = isDuel ? '' : 'none';
-  if(!isDuel && !soloSecret) newSoloGame();
+  tabDuel.classList.toggle('active', mode==='duel');
+  tabSolo.classList.toggle('active', mode==='solo');
+  tabMulti.classList.toggle('active', mode==='multi');
+  duelMode.style.display = mode==='duel' ? '' : 'none';
+  soloModeEl.style.display = mode==='solo' ? '' : 'none';
+  multiModeEl.style.display = mode==='multi' ? '' : 'none';
+  duelGuessbar.style.display = mode==='duel' ? '' : 'none';
+  if(mode==='solo' && !soloSecret) newSoloGame();
+  if(mode==='multi') initMultiTab();
 }
 
 /* ---------- Solo mode: silhouette + guesses ---------- */
@@ -1158,8 +1244,266 @@ soloHintBtn.addEventListener('click', ()=>{
   updateSoloHintButton();
 });
 
-async function init(){
+/* ---------- Multiplayer (Firebase Realtime Database) ---------- */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDhAhnY6cLeVIFZ0QjfIzipwb6R77tsL_8",
+  authDomain: "guess-who-ch.firebaseapp.com",
+  databaseURL: "https://guess-who-ch-default-rtdb.firebaseio.com",
+  projectId: "guess-who-ch"
+};
 
+let fbDb = null;
+let multiConfigured = false;
+if(FIREBASE_CONFIG.apiKey){
+  try{
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fbDb = firebase.database();
+    multiConfigured = true;
+  }catch(e){ multiConfigured = false; }
+}
+
+const multiNoConfig = document.getElementById('multiNoConfig');
+const multiLobby = document.getElementById('multiLobby');
+const multiWaiting = document.getElementById('multiWaiting');
+const multiPlay = document.getElementById('multiPlay');
+const multiName = document.getElementById('multiName');
+const multiJoinCode = document.getElementById('multiJoinCode');
+const multiLobbyError = document.getElementById('multiLobbyError');
+const multiRoomCode = document.getElementById('multiRoomCode');
+const multiTurnPill = document.getElementById('multiTurnPill');
+const multiMySecret = document.getElementById('multiMySecret');
+const multiQgrid = document.getElementById('multiQgrid');
+const multiAnswerbox = document.getElementById('multiAnswerbox');
+const multiLog = document.getElementById('multiLog');
+const multiGuessSelect = document.getElementById('multiGuessSelect');
+
+let myRole = null;
+let myRoomCode = null;
+let myName = '';
+let roomRef = null;
+let roomData = null;
+let multiQuestions = [];
+let multiAskedIdx = new Set();
+let multiTabInited = false;
+
+function generateRoomCode(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for(let i=0;i<4;i++) code += chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+
+function initMultiTab(){
+  if(!multiConfigured){
+    multiNoConfig.style.display = 'block';
+    multiLobby.style.display = 'none';
+    return;
+  }
+  multiNoConfig.style.display = 'none';
+  if(!multiTabInited){
+    populateMultiGuessSelect();
+    multiTabInited = true;
+  }
+}
+
+function populateMultiGuessSelect(){
+  multiGuessSelect.innerHTML = '<option value="">Faire une supposition…</option>' +
+    PLAYERS.map(p=>`<option value="${p.id}">#${p.num} ${p.name}</option>`).join('');
+}
+
+function showLobbyView(view){
+  multiLobby.style.display = view==='lobby' ? '' : 'none';
+  multiWaiting.style.display = view==='waiting' ? '' : 'none';
+  multiPlay.style.display = view==='play' ? '' : 'none';
+}
+
+document.getElementById('multiCreateBtn').addEventListener('click', ()=>{
+  myName = multiName.value.trim() || 'Joueur 1';
+  const code = generateRoomCode();
+  const secretId = PLAYERS[Math.floor(Math.random()*PLAYERS.length)].id;
+  myRole = 'p1';
+  myRoomCode = code;
+  multiAskedIdx = new Set();
+  multiQuestions = shuffle(QUESTION_POOL).slice(0, 12);
+
+  fbDb.ref('rooms/' + code).set({
+    status: 'waiting',
+    turn: 'p1',
+    players: { p1: { name: myName, secretId, connected: true } },
+    log: [],
+    winner: null,
+    createdAt: firebase.database.ServerValue.TIMESTAMP
+  }).then(()=>{
+    multiRoomCode.textContent = code;
+    showLobbyView('waiting');
+    attachRoomListener();
+  }).catch(()=>{
+    multiLobbyError.textContent = "Impossible de créer la partie. Vérifie ta connexion.";
+    multiLobbyError.style.display = 'block';
+  });
+});
+
+document.getElementById('multiCancelBtn').addEventListener('click', ()=>{
+  if(roomRef) roomRef.remove();
+  leaveMultiRoom();
+});
+
+document.getElementById('multiJoinBtn').addEventListener('click', ()=>{
+  const code = multiJoinCode.value.trim().toUpperCase();
+  myName = multiName.value.trim() || 'Joueur 2';
+  multiLobbyError.style.display = 'none';
+  if(code.length !== 4){
+    multiLobbyError.textContent = 'Entre le code à 4 lettres reçu de ton adversaire.';
+    multiLobbyError.style.display = 'block';
+    return;
+  }
+  const ref = fbDb.ref('rooms/' + code);
+  ref.get().then(snap=>{
+    const data = snap.val();
+    if(!data){
+      multiLobbyError.textContent = "Aucune partie trouvée avec ce code.";
+      multiLobbyError.style.display = 'block';
+      return;
+    }
+    if(data.players && data.players.p2){
+      multiLobbyError.textContent = "Cette partie est déjà complète.";
+      multiLobbyError.style.display = 'block';
+      return;
+    }
+    let secretId = PLAYERS[Math.floor(Math.random()*PLAYERS.length)].id;
+    if(data.players && data.players.p1 && secretId === data.players.p1.secretId){
+      const alt = PLAYERS.filter(p=>p.id!==secretId);
+      secretId = alt[Math.floor(Math.random()*alt.length)].id;
+    }
+    myRole = 'p2';
+    myRoomCode = code;
+    multiAskedIdx = new Set();
+    multiQuestions = shuffle(QUESTION_POOL).slice(0, 12);
+    ref.update({
+      status: 'playing',
+      'players/p2': { name: myName, secretId, connected: true }
+    }).then(()=>{
+      attachRoomListener();
+    });
+  }).catch(()=>{
+    multiLobbyError.textContent = "Impossible de rejoindre la partie. Vérifie ta connexion.";
+    multiLobbyError.style.display = 'block';
+  });
+});
+
+function attachRoomListener(){
+  roomRef = fbDb.ref('rooms/' + myRoomCode);
+  roomRef.on('value', snap=>{
+    roomData = snap.val();
+    if(!roomData){ leaveMultiRoom(); return; }
+    renderMultiRoom();
+  });
+}
+
+function renderMultiRoom(){
+  if(roomData.status === 'waiting'){
+    showLobbyView('waiting');
+    multiRoomCode.textContent = myRoomCode;
+    return;
+  }
+  showLobbyView('play');
+
+  const oppRole = myRole === 'p1' ? 'p2' : 'p1';
+  const me = roomData.players[myRole];
+  const opp = roomData.players[oppRole];
+  const mySecretPlayer = me ? PLAYERS.find(p=>p.id===me.secretId) : null;
+
+  if(mySecretPlayer){
+    multiMySecret.textContent = `Tu es : ${mySecretPlayer.name} (#${mySecretPlayer.num}, ${mySecretPlayer.posLabel})`;
+  }
+
+  if(roomData.status === 'finished'){
+    const won = roomData.winner === myRole;
+    const oppSecretPlayer = opp ? PLAYERS.find(p=>p.id===opp.secretId) : null;
+    showResult(won, oppSecretPlayer || mySecretPlayer, 'multi');
+    return;
+  }
+
+  const myTurn = roomData.turn === myRole && !!opp;
+  multiTurnPill.innerHTML = !opp
+    ? "En attente d'un adversaire…"
+    : myTurn ? "C'est ton tour" : `Tour de ${opp.name}`;
+
+  renderMultiQuestions(myTurn);
+  renderMultiLog();
+  document.getElementById('multiGuessBtn').disabled = !myTurn;
+  multiGuessSelect.disabled = !myTurn;
+}
+
+function renderMultiQuestions(myTurn){
+  multiQgrid.innerHTML = '';
+  multiQuestions.forEach((q, idx)=>{
+    const b = document.createElement('button');
+    b.className = 'qbtn';
+    b.textContent = q.text;
+    b.disabled = !myTurn || multiAskedIdx.has(idx);
+    b.addEventListener('click', ()=>askMultiQuestion(idx, q));
+    multiQgrid.appendChild(b);
+  });
+}
+
+function renderMultiLog(){
+  const entries = roomData.log ? Object.values(roomData.log) : [];
+  multiLog.innerHTML = entries.slice().reverse().map(e=>`<div class="log-item">${e.text}</div>`).join('');
+}
+
+function askMultiQuestion(idx, q){
+  if(roomData.turn !== myRole) return;
+  multiAskedIdx.add(idx);
+  const oppRole = myRole === 'p1' ? 'p2' : 'p1';
+  const oppSecret = PLAYERS.find(p=>p.id===roomData.players[oppRole].secretId);
+  const answer = q.test(oppSecret);
+  multiAnswerbox.innerHTML = `<span class="badge ${answer?'oui':'non'}">${answer?'Oui':'Non'}</span><span>${q.text}</span>`;
+  const logRef = fbDb.ref('rooms/' + myRoomCode + '/log').push();
+  logRef.set({ text: `${myName} a demandé « ${q.text} » — ${answer?'Oui':'Non'}` });
+  fbDb.ref('rooms/' + myRoomCode + '/turn').set(oppRole);
+}
+
+document.getElementById('multiGuessBtn').addEventListener('click', ()=>{
+  if(!roomData || roomData.turn !== myRole) return;
+  const val = multiGuessSelect.value;
+  if(!val) return;
+  const oppRole = myRole === 'p1' ? 'p2' : 'p1';
+  const oppSecretId = roomData.players[oppRole].secretId;
+  const guessedPlayer = PLAYERS.find(p=>p.id===Number(val));
+  const win = Number(val) === oppSecretId;
+  const logRef = fbDb.ref('rooms/' + myRoomCode + '/log').push();
+
+  if(win){
+    logRef.set({ text: `${myName} a deviné correctement : ${guessedPlayer.name} ! 🏆` });
+    fbDb.ref('rooms/' + myRoomCode).update({ status:'finished', winner: myRole });
+    addCoins(20);
+  } else {
+    logRef.set({ text: `${myName} a proposé ${guessedPlayer.name} — incorrect.` });
+    fbDb.ref('rooms/' + myRoomCode + '/turn').set(oppRole);
+    addCoins(2);
+  }
+});
+
+document.getElementById('multiLeaveBtn').addEventListener('click', leaveMultiRoom);
+
+document.getElementById('multiLogToggle').addEventListener('click', ()=>{
+  const open = multiLog.classList.toggle('open');
+  document.getElementById('multiLogToggle').textContent = open ? "Masquer l'historique ▴" : "Voir l'historique ▾";
+});
+
+function leaveMultiRoom(){
+  if(roomRef) roomRef.off();
+  roomRef = null;
+  roomData = null;
+  myRole = null;
+  myRoomCode = null;
+  multiLobbyError.style.display = 'none';
+  multiJoinCode.value = '';
+  showLobbyView('lobby');
+}
+
+async function init(){
   await loadRemoteContent();
   newGame();
 }
