@@ -960,13 +960,41 @@ function initials(name){
   return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
 }
 
-// Uses p.photo (a URL) if the player data provides one; falls back to the
-// colored initials avatar otherwise. See content.json for how to add photos.
+// Uses p.photo (a URL) if the player data provides one; otherwise falls back
+// to an original cartoon mascot (not a likeness of anyone real). See
+// content.json for how to add a photo per player.
 function avatarInner(p){
   if(p.photo){
-    return `<img src="${p.photo}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.parentElement.textContent='${initials(p.name)}';">`;
+    return `<img src="${p.photo}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.parentElement.innerHTML='${mascotSVG(p).replace(/'/g,"\\'")}';">`;
   }
-  return initials(p.name);
+  return mascotSVG(p);
+}
+
+const SKIN_TONES = ['#F2C29B','#E0A978','#C68F5B','#8D5524','#FBD8B4'];
+const HELMET_COLORS = {C:'#AF1E2D', AD:'#AF1E2D', AG:'#AF1E2D', D:'#2A3B7A', G:'#7C879E'};
+
+function seedFrom(id, salt){
+  const x = Math.sin(id * 12.9898 + salt * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+// A small original cartoon mascot face — purely decorative, not a likeness
+// of any real person. Varies slightly per player id for visual variety.
+function mascotSVG(p){
+  const skin = SKIN_TONES[Math.floor(seedFrom(p.id, 1) * SKIN_TONES.length)];
+  const helmet = HELMET_COLORS[p.pos] || '#AF1E2D';
+  const eyeGap = 3.5 + seedFrom(p.id, 2) * 2;
+  const smile = seedFrom(p.id, 3) > 0.4;
+  return `<svg viewBox="0 0 40 40" width="100%" height="100%" style="display:block;">
+    <circle cx="20" cy="24" r="12.5" fill="${skin}"/>
+    <circle cx="${(20-eyeGap).toFixed(1)}" cy="22" r="1.5" fill="#2a2107"/>
+    <circle cx="${(20+eyeGap).toFixed(1)}" cy="22" r="1.5" fill="#2a2107"/>
+    ${smile
+      ? `<path d="M15 27 Q20 30.5 25 27" stroke="#2a2107" stroke-width="1.4" fill="none" stroke-linecap="round"/>`
+      : `<line x1="16" y1="27.5" x2="24" y2="27.5" stroke="#2a2107" stroke-width="1.4" stroke-linecap="round"/>`}
+    <path d="M6.5 18 A13.5 13.5 0 0 1 33.5 18 Z" fill="${helmet}"/>
+    <rect x="6" y="15.5" width="28" height="4" rx="2" fill="${helmet}"/>
+  </svg>`;
 }
 
 function renderRoster(){
