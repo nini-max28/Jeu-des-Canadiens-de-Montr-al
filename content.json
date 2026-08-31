@@ -185,6 +185,97 @@
       "name": "P.K. Subban",
       "photo": "https://www.hockeydb.com/ihdb/photos/carey-price-2021-45.jpg"
     }
+        {
+      "id": 301,
+      "name": "Sidney Crosby",
+      "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8471675.webp&w=1920&q=75"
+    },
+    {
+      "id": 302,
+      "name": "Alexander Ovechkin",
+      "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8471214.webp&w=1920&q=75"
+    },
+    {
+      "id": 303,
+      "name": "Connor McDavid",
+      "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8478402.webp&w=1920&q=75"
+    },
+    {
+      "id": 304,
+      "name": "Nathan MacKinnon",
+      "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8477492.webp&w=1920&q=75"
+    },
+    {
+      "id": 305,
+      "name": "Auston Matthews",
+      "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8479318.webp&w=1920&q=75"
+    },
+    {
+      "id": 306,
+      "name": "Wayne Gretzky",
+      "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8479318.webp&w=1920&q=75"
+    },
+    {
+      "id": 307,
+      "name": "Mario Lemieux",
+      "photo": "https://www.hockeydb.com/ihdb/photos/mario-lemieux-1996-50.jpg"
+    },
+    {
+      "id": 308,
+      "name": "Bobby Orr",
+      "photo": "https://www.hockeydb.com/ihdb/photos/mario-lemieux-1996-50.jpg"
+    },
+    {
+      "id": 309,
+      "name": "Gordie Howe",
+      "photo": "https://www.hockeydb.com/ihdb/photos/mario-lemieux-1996-50.jpg"
+    },
+    {
+      "id": 310,
+      "name": "Mark Messier",
+      "photo": ""
+    },
+    {
+      "id": 311,
+      "name": "Jaromir Jagr",
+      "photo": ""
+    },
+    {
+      "id": 312,
+      "name": "Steven Stamkos",
+      "photo": ""
+    },
+    {
+      "id": 313,
+      "name": "Nikita Kucherov",
+      "photo": ""
+    },
+    {
+      "id": 314,
+      "name": "Cale Makar",
+      "photo": ""
+    },
+    {
+      "id": 315,
+      "name": "David Pastrnak",
+      "photo": ""
+    },
+    {
+      "id": 316,
+      "name": "Leon Draisaitl",
+      "photo": ""
+    },
+    {
+      "id": 317,
+      "name": "Erik Karlsson",
+      "photo": ""
+    },
+    {
+      "id": 318,
+      "name": "Andrei Vasilevskiy",
+      "photo": ""
+    }
+
   ],
   "questions": []
 }
