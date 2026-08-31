@@ -537,14 +537,18 @@
     margin-bottom:4px;
   }
   .stattile span{
-    font-size:17px;
-    font-weight:900;
+    font-size:13px;
+    font-weight:800;
     color:var(--glace);
-    font-family:"Arial Narrow",Arial,sans-serif;
+    line-height:1.25;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   .stattile.hit{background:#1E5B3A;}
   .stattile.hit b{color:#8FE0AE;}
   .stattile.hit span{color:#B7F0CC;}
+  .stattile.miss{background:#7E1522;}
+  .stattile.miss b{color:#F5B4BB;}
+  .stattile.miss span{color:#FBDADD;}
 
   .scramblewrap{margin:16px 0 0;}
   .letterboxes{
@@ -1534,8 +1538,11 @@ function processSoloGuess(found){
   const posHit = found.pos === soloSecret.pos;
   const countryHit = found.country === soloSecret.country;
   const teamHit = found.team === soloSecret.team;
-  const born = arrowCompare(found.birthYear, soloSecret.birthYear);
-  const cupsCmp = arrowCompare(found.cups, soloSecret.cups);
+  const tenureHit = found.tenureStart === soloSecret.tenureStart;
+  const tenureArrow = tenureHit ? '' : (soloSecret.tenureStart > found.tenureStart ? ' ↑' : ' ↓');
+  const cupsHit = found.cups === soloSecret.cups;
+  const cupsArrow = cupsHit ? '' : (soloSecret.cups > found.cups ? ' ↑' : ' ↓');
+  const foundSpan = `${found.tenureStart}–${found.tenureEnd || 'présent'}`;
   row.innerHTML = `
     <div class="guesscard-head">
       <div class="avatar">${avatarInner(found)}</div>
@@ -1543,13 +1550,13 @@ function processSoloGuess(found){
       ${win ? '<span class="wintag">✓ Trouvé</span>' : ''}
     </div>
     <div class="statrow">
-      <div class="stattile ${posHit?'hit':''}"><b>POSITION</b><span>${posHit?'✓':'✗'}</span></div>
-      <div class="stattile ${countryHit?'hit':''}"><b>PAYS</b><span>${countryHit?'✓':'✗'}</span></div>
-      <div class="stattile ${born.hit?'hit':''}"><b>NÉ EN</b><span>${born.sym}</span></div>
+      <div class="stattile ${posHit?'hit':'miss'}"><b>POSITION</b><span>${found.posLabel}</span></div>
+      <div class="stattile ${countryHit?'hit':'miss'}"><b>PAYS</b><span>${found.country}</span></div>
+      <div class="stattile ${tenureHit?'hit':'miss'}"><b>CARRIÈRE</b><span>${foundSpan}${tenureArrow}</span></div>
     </div>
     <div class="statrow">
-      <div class="stattile ${teamHit?'hit':''}"><b>ÉQUIPE</b><span>${teamHit?'✓':'✗'}</span></div>
-      <div class="stattile ${cupsCmp.hit?'hit':''}"><b>COUPES</b><span>${cupsCmp.sym}</span></div>
+      <div class="stattile ${teamHit?'hit':'miss'}"><b>ÉQUIPE</b><span>${found.team}</span></div>
+      <div class="stattile ${cupsHit?'hit':'miss'}"><b>COUPES</b><span>${found.cups}${cupsArrow}</span></div>
     </div>`;
   soloGuessesEl.prepend(row);
 
