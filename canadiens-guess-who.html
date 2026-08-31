@@ -223,7 +223,7 @@
   }
   .card{
     perspective:800px;
-    height:118px;
+    height:150px;
   }
   .cardface{
     position:relative;
@@ -261,8 +261,8 @@
     letter-spacing:.03em;
   }
   .avatar{
-    width:38px;height:38px;
-    border-radius:8px;
+    width:64px;height:64px;
+    border-radius:10px;
     background:linear-gradient(160deg, var(--rouge), var(--rouge-fonce));
     color:#fff;
     display:flex;align-items:center;justify-content:center;
@@ -344,8 +344,8 @@
     width:100%;
   }
   .overlaycard .avatar{
-    width:64px;height:64px;font-size:24px;margin:0 auto 14px;
-    border-radius:12px;
+    width:88px;height:88px;font-size:24px;margin:0 auto 14px;
+    border-radius:14px;
   }
   .overlaycard h3{
     margin:0 0 4px;font-size:20px;color:var(--glace);
@@ -426,7 +426,7 @@
 
   .pickgrid{
     display:grid;
-    grid-template-columns:repeat(4, 1fr);
+    grid-template-columns:repeat(3, 1fr);
     gap:8px;
     margin-top:12px;
   }
@@ -438,7 +438,7 @@
     cursor:pointer;
   }
   .picktile:active{transform:scale(0.95);}
-  .picktile .avatar{width:44px;height:44px;margin:0 auto 6px;border-radius:10px;}
+  .picktile .avatar{width:64px;height:64px;margin:0 auto 6px;border-radius:10px;}
   .picktile .pickname{font-size:10px;color:var(--texte-att);line-height:1.2;}
   .picktile.tried{opacity:.35;pointer-events:none;}
   .silhouettecard{
@@ -502,7 +502,7 @@
     gap:10px;
     margin-bottom:12px;
   }
-  .guesscard-head .avatar{width:34px;height:34px;font-size:13px;border-radius:8px;flex-shrink:0;}
+  .guesscard-head .avatar{width:52px;height:52px;font-size:13px;border-radius:10px;flex-shrink:0;}
   .guesscard-name{font-weight:800;font-size:15px;color:var(--glace);flex:1;}
   .wintag{font-size:11px;font-weight:800;color:#8FE0AE;background:rgba(63,191,116,0.15);padding:4px 9px;border-radius:999px;}
 
@@ -800,7 +800,7 @@ const CURRENT = [
   {id:18,name:"Alex Newhook",num:15,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:false,shootsLeft:true,veteran:true,firstRound:true},
   {id:19,name:"David Reinbacher",num:92,pos:"D",posLabel:"Défenseur",country:"Autriche",continent:"Europe",captain:null,quebec:false,tall:true,shootsLeft:false,veteran:false,firstRound:true},
   {id:20,name:"Patrik Laine",num:29,pos:"AD",posLabel:"Ailier droit",country:"Finlande",continent:"Europe",captain:null,quebec:false,tall:true,shootsLeft:false,veteran:true,firstRound:true}
-].map(p=>({...p, active:true, numberRetired:false, hallOfFame:false, stanleyCup:false, before1980:false, era:"Actif"}));
+].map(p=>({...p, active:true, numberRetired:false, hallOfFame:false, stanleyCup:false, before1980:false, era:"Actif", team:"Canadiens"}));
 
 const LEGENDS = [
   {id:101,name:"Maurice Richard",num:9,pos:"AD",posLabel:"Ailier droit",country:"Canada",continent:"Amérique du Nord",captain:"C",quebec:true,tall:false,shootsLeft:false,veteran:true,firstRound:false,active:false,numberRetired:true,hallOfFame:true,stanleyCup:true,before1980:true,era:"Légende"},
@@ -813,7 +813,7 @@ const LEGENDS = [
   {id:108,name:"Saku Koivu",num:11,pos:"C",posLabel:"Centre",country:"Finlande",continent:"Europe",captain:"C",quebec:false,tall:false,shootsLeft:true,veteran:true,firstRound:true,active:false,numberRetired:false,hallOfFame:false,stanleyCup:false,before1980:false,era:"Légende"},
   {id:109,name:"Carey Price",num:31,pos:"G",posLabel:"Gardien",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:true,shootsLeft:true,veteran:true,firstRound:true,active:false,numberRetired:true,hallOfFame:false,stanleyCup:false,before1980:false,era:"Légende"},
   {id:110,name:"P.K. Subban",num:76,pos:"D",posLabel:"Défenseur",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:true,firstRound:false,active:false,numberRetired:false,hallOfFame:false,stanleyCup:false,before1980:false,era:"Légende"}
-];
+].map(p=>({...p, team:"Canadiens"}));
 
 const PLAYERS = [...CURRENT, ...LEGENDS];
 
@@ -860,6 +860,32 @@ PLAYERS.forEach(p=>{
   }
 });
 
+// Vedettes d'autres équipes — utilisées SEULEMENT dans le mode Solo, pour
+// éviter que le bassin de joueurs ne se répète trop vite. Les modes Face à
+// face et En ligne restent 100% Canadiens.
+const OTHER_TEAMS = [
+  {id:301,name:"Sidney Crosby",num:87,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",team:"Penguins",captain:"C",quebec:false,tall:false,shootsLeft:true,veteran:true,firstRound:true,active:true,numberRetired:false,hallOfFame:false,stanleyCup:true,before1980:false,era:"Actif",birthYear:1987,tenureStart:2005,tenureEnd:null,cups:3},
+  {id:302,name:"Alexander Ovechkin",num:8,pos:"AG",posLabel:"Ailier gauche",country:"Russie",continent:"Europe",team:"Capitals",captain:"C",quebec:false,tall:true,shootsLeft:false,veteran:true,firstRound:true,active:true,numberRetired:false,hallOfFame:false,stanleyCup:true,before1980:false,era:"Actif",birthYear:1985,tenureStart:2005,tenureEnd:null,cups:1},
+  {id:303,name:"Connor McDavid",num:97,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",team:"Oilers",captain:"C",quebec:false,tall:false,shootsLeft:true,veteran:true,firstRound:true,active:true,numberRetired:false,hallOfFame:false,stanleyCup:false,before1980:false,era:"Actif",birthYear:1997,tenureStart:2015,tenureEnd:null,cups:0},
+  {id:304,name:"Nathan MacKinnon",num:29,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",team:"Avalanche",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:true,firstRound:true,active:true,numberRetired:false,hallOfFame:false,stanleyCup:true,before1980:false,era:"Actif",birthYear:1995,tenureStart:2013,tenureEnd:null,cups:1},
+  {id:305,name:"Auston Matthews",num:34,pos:"C",posLabel:"Centre",country:"États-Unis",continent:"Amérique du Nord",team:"Maple Leafs",captain:"C",quebec:false,tall:true,shootsLeft:true,veteran:true,firstRound:true,active:true,numberRetired:false,hallOfFame:false,stanleyCup:false,before1980:false,era:"Actif",birthYear:1997,tenureStart:2016,tenureEnd:null,cups:0},
+  {id:306,name:"Wayne Gretzky",num:99,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",team:"Oilers",captain:"C",quebec:false,tall:false,shootsLeft:true,veteran:true,firstRound:false,active:false,numberRetired:true,hallOfFame:true,stanleyCup:true,before1980:true,era:"Légende",birthYear:1961,tenureStart:1979,tenureEnd:1999,cups:4},
+  {id:307,name:"Mario Lemieux",num:66,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",team:"Penguins",captain:"C",quebec:false,tall:true,shootsLeft:false,veteran:true,firstRound:true,active:false,numberRetired:true,hallOfFame:true,stanleyCup:true,before1980:false,era:"Légende",birthYear:1965,tenureStart:1984,tenureEnd:2006,cups:2},
+  {id:308,name:"Bobby Orr",num:4,pos:"D",posLabel:"Défenseur",country:"Canada",continent:"Amérique du Nord",team:"Bruins",captain:null,quebec:false,tall:false,shootsLeft:true,veteran:true,firstRound:false,active:false,numberRetired:true,hallOfFame:true,stanleyCup:true,before1980:true,era:"Légende",birthYear:1948,tenureStart:1966,tenureEnd:1978,cups:2},
+  {id:309,name:"Gordie Howe",num:9,pos:"AD",posLabel:"Ailier droit",country:"Canada",continent:"Amérique du Nord",team:"Red Wings",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:true,firstRound:false,active:false,numberRetired:true,hallOfFame:true,stanleyCup:true,before1980:true,era:"Légende",birthYear:1928,tenureStart:1946,tenureEnd:1971,cups:4},
+  {id:310,name:"Mark Messier",num:11,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",team:"Oilers",captain:"C",quebec:false,tall:true,shootsLeft:true,veteran:true,firstRound:false,active:false,numberRetired:true,hallOfFame:true,stanleyCup:true,before1980:true,era:"Légende",birthYear:1961,tenureStart:1979,tenureEnd:2004,cups:6},
+  {id:311,name:"Jaromir Jagr",num:68,pos:"AD",posLabel:"Ailier droit",country:"Tchéquie",continent:"Europe",team:"Penguins",captain:null,quebec:false,tall:true,shootsLeft:true,veteran:true,firstRound:true,active:false,numberRetired:true,hallOfFame:true,stanleyCup:true,before1980:false,era:"Légende",birthYear:1972,tenureStart:1990,tenureEnd:2018,cups:2},
+  {id:312,name:"Steven Stamkos",num:91,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",team:"Predators",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:true,firstRound:true,active:true,numberRetired:false,hallOfFame:false,stanleyCup:true,before1980:false,era:"Actif",birthYear:1990,tenureStart:2008,tenureEnd:null,cups:2},
+  {id:313,name:"Nikita Kucherov",num:86,pos:"AD",posLabel:"Ailier droit",country:"Russie",continent:"Europe",team:"Lightning",captain:null,quebec:false,tall:false,shootsLeft:true,veteran:true,firstRound:false,active:true,numberRetired:false,hallOfFame:false,stanleyCup:true,before1980:false,era:"Actif",birthYear:1993,tenureStart:2013,tenureEnd:null,cups:2},
+  {id:314,name:"Cale Makar",num:8,pos:"D",posLabel:"Défenseur",country:"Canada",continent:"Amérique du Nord",team:"Avalanche",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:true,firstRound:true,active:true,numberRetired:false,hallOfFame:false,stanleyCup:true,before1980:false,era:"Actif",birthYear:1998,tenureStart:2019,tenureEnd:null,cups:1},
+  {id:315,name:"David Pastrnak",num:88,pos:"AD",posLabel:"Ailier droit",country:"Tchéquie",continent:"Europe",team:"Bruins",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:true,firstRound:true,active:true,numberRetired:false,hallOfFame:false,stanleyCup:false,before1980:false,era:"Actif",birthYear:1996,tenureStart:2014,tenureEnd:null,cups:0},
+  {id:316,name:"Leon Draisaitl",num:29,pos:"C",posLabel:"Centre",country:"Allemagne",continent:"Europe",team:"Oilers",captain:null,quebec:false,tall:true,shootsLeft:true,veteran:true,firstRound:true,active:true,numberRetired:false,hallOfFame:false,stanleyCup:false,before1980:false,era:"Actif",birthYear:1995,tenureStart:2014,tenureEnd:null,cups:0},
+  {id:317,name:"Erik Karlsson",num:65,pos:"D",posLabel:"Défenseur",country:"Suède",continent:"Europe",team:"Penguins",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:true,firstRound:true,active:true,numberRetired:false,hallOfFame:false,stanleyCup:false,before1980:false,era:"Actif",birthYear:1990,tenureStart:2009,tenureEnd:null,cups:0},
+  {id:318,name:"Andrei Vasilevskiy",num:88,pos:"G",posLabel:"Gardien",country:"Russie",continent:"Europe",team:"Lightning",captain:null,quebec:false,tall:true,shootsLeft:true,veteran:true,firstRound:true,active:true,numberRetired:false,hallOfFame:false,stanleyCup:true,before1980:false,era:"Actif",birthYear:1994,tenureStart:2014,tenureEnd:null,cups:2}
+];
+
+const SOLO_PLAYERS = [...PLAYERS, ...OTHER_TEAMS];
+
 // Contenu à distance (optionnel) : pointe CONTENT_URL vers un fichier JSON hébergé
 // (GitHub raw, Firebase, etc.) pour ajouter des joueurs/questions sans republier l'app.
 // Format attendu : { "players": [ {...mêmes champs que ci-dessus...} ], "questions": [ {"text": "...", "field": "quebec"} ] }
@@ -873,11 +899,12 @@ async function loadRemoteContent(){
     const data = await res.json();
     if(Array.isArray(data.players)){
       data.players.forEach(p=>{
-        const existing = PLAYERS.find(e=>e.id===p.id);
+        const existing = PLAYERS.find(e=>e.id===p.id) || OTHER_TEAMS.find(e=>e.id===p.id);
         if(existing){
           Object.assign(existing, p); // overlay fields (e.g., just add a photo to a built-in player)
         } else {
           PLAYERS.push(p); // brand-new player not already in the roster
+          SOLO_PLAYERS.push(p); // also make it guessable in Solo mode
         }
       });
     }
@@ -1270,14 +1297,14 @@ function applySoloPickGridVisibility(){
 
 function renderSoloPickGrid(){
   if(!soloShowPickGrid){ soloPickGridEl.innerHTML = ''; return; }
-  soloPickGridEl.innerHTML = PLAYERS.map(p=>`
+  soloPickGridEl.innerHTML = SOLO_PLAYERS.map(p=>`
     <div class="picktile ${soloGuessedIds.has(p.id)?'tried':''}" data-id="${p.id}">
       <div class="avatar">${avatarInner(p)}</div>
       <div class="pickname">${p.name}</div>
     </div>`).join('');
   soloPickGridEl.querySelectorAll('.picktile:not(.tried)').forEach(el=>{
     bindTap(el, ()=>{
-      const p = PLAYERS.find(pl=>pl.id===Number(el.dataset.id));
+      const p = SOLO_PLAYERS.find(pl=>pl.id===Number(el.dataset.id));
       if(p) processSoloGuess(p);
     });
   });
@@ -1386,7 +1413,7 @@ function arrowCompare(foundVal, secretVal){
 
 function newSoloGame(){
   const cfg = DIFFICULTY[soloDifficulty];
-  soloSecret = PLAYERS[Math.floor(Math.random()*PLAYERS.length)];
+  soloSecret = SOLO_PLAYERS[Math.floor(Math.random()*SOLO_PLAYERS.length)];
   soloTriesLeft = cfg.tries;
   soloHintsLeft = cfg.hints;
   soloGuessedIds = new Set();
@@ -1446,7 +1473,7 @@ function soloGuess(){
     soloGuessError.style.display = 'block';
     return;
   }
-  const found = PLAYERS.find(p=>p.name.toLowerCase() === raw.toLowerCase());
+  const found = SOLO_PLAYERS.find(p=>p.name.toLowerCase() === raw.toLowerCase());
   if(!found){
     soloGuessError.textContent = `« ${raw} » ne correspond à aucun joueur de la liste. Vérifie l'orthographe exacte.`;
     soloGuessError.style.display = 'block';
@@ -1472,8 +1499,8 @@ function processSoloGuess(found){
   row.className = 'guesscard';
   const posHit = found.pos === soloSecret.pos;
   const countryHit = found.country === soloSecret.country;
+  const teamHit = found.team === soloSecret.team;
   const born = arrowCompare(found.birthYear, soloSecret.birthYear);
-  const tenure = arrowCompare(found.tenureStart, soloSecret.tenureStart);
   const cupsCmp = arrowCompare(found.cups, soloSecret.cups);
   row.innerHTML = `
     <div class="guesscard-head">
@@ -1487,7 +1514,7 @@ function processSoloGuess(found){
       <div class="stattile ${born.hit?'hit':''}"><b>NÉ EN</b><span>${born.sym}</span></div>
     </div>
     <div class="statrow">
-      <div class="stattile ${tenure.hit?'hit':''}"><b>ARRIVÉE CH</b><span>${tenure.sym}</span></div>
+      <div class="stattile ${teamHit?'hit':''}"><b>ÉQUIPE</b><span>${teamHit?'✓':'✗'}</span></div>
       <div class="stattile ${cupsCmp.hit?'hit':''}"><b>COUPES</b><span>${cupsCmp.sym}</span></div>
     </div>`;
   soloGuessesEl.prepend(row);
