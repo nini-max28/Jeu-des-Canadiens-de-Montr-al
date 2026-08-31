@@ -423,6 +423,24 @@
     color:var(--texte-att);
   }
   .imgtoggle input{accent-color:var(--rouge);width:16px;height:16px;}
+
+  .pickgrid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:8px;
+    margin-top:12px;
+  }
+  .picktile{
+    background:var(--acier);
+    border-radius:10px;
+    padding:6px 4px 8px;
+    text-align:center;
+    cursor:pointer;
+  }
+  .picktile:active{transform:scale(0.95);}
+  .picktile .avatar{width:44px;height:44px;margin:0 auto 6px;border-radius:10px;}
+  .picktile .pickname{font-size:10px;color:var(--texte-att);line-height:1.2;}
+  .picktile.tried{opacity:.35;pointer-events:none;}
   .silhouettecard{
     max-width:220px;
     margin:0 auto;
@@ -659,6 +677,12 @@
       </div>
       <p id="soloGuessError" style="display:none;color:#F5C6CB;font-size:12.5px;margin:8px 0 0;"></p>
 
+      <label class="imgtoggle" style="padding:12px 0 0;">
+        <input type="checkbox" id="soloPickToggle" checked>
+        <span>Deviner en cliquant une image (pour les petits qui n'écrivent pas encore)</span>
+      </label>
+      <div class="pickgrid" id="soloPickGrid"></div>
+
       <div class="hintrow">
         <span style="font-size:12.5px;color:#9FA9C4;" id="soloHintCounter">2 indices restants</span>
         <button class="btn btn-primary" id="soloHintBtn" style="background:var(--or);color:#2a2107;">Obtenir un indice</button>
@@ -892,20 +916,16 @@ const QUESTION_POOL = [
 let QUESTIONS = [];
 
 // Fixes the iOS Safari quirk where the first tap on a button just dismisses
-// the keyboard (from a focused input) instead of firing the click.
+// the keyboard (from a focused input) instead of firing the click: we blur
+// the focused input the instant the touch begins, so the keyboard starts
+// closing within the SAME tap instead of eating a separate one.
 function bindTap(el, handler){
   if(!el) return;
-  let handledByTouch = false;
-  el.addEventListener('touchend', function(e){
-    handledByTouch = true;
-    e.preventDefault();
-    handler(e);
-    setTimeout(()=>{ handledByTouch = false; }, 400);
-  }, {passive:false});
-  el.addEventListener('click', function(e){
-    if(handledByTouch) return;
-    handler(e);
-  });
+  el.addEventListener('touchstart', function(){
+    const active = document.activeElement;
+    if(active && active !== el && typeof active.blur === 'function') active.blur();
+  }, {passive:true});
+  el.addEventListener('click', handler);
 }
 
 function shuffle(arr){
@@ -931,18 +951,38 @@ let selectedId = null;
 let askedIdx = new Set();
 let hintsLeft = 3;
 
-/* ---------- Coin economy ---------- */
+/* ---------- Coin economy (saved on this device) ---------- */
 const HINT_COST = 5;
-let coinBalance = 20;
+const COIN_STORAGE_KEY = 'chGuessWhoCoins';
+
+function loadSavedCoins(){
+  try{
+    const saved = localStorage.getItem(COIN_STORAGE_KEY);
+    if(saved !== null){
+      const n = parseInt(saved, 10);
+      if(!isNaN(n)) return n;
+    }
+  }catch(e){ /* localStorage unavailable (private browsing, etc.) — start fresh */ }
+  return 20;
+}
+
+let coinBalance = loadSavedCoins();
 const coinCountEl = document.getElementById('coinCount');
+coinCountEl.textContent = coinBalance;
+
+function saveCoins(){
+  try{ localStorage.setItem(COIN_STORAGE_KEY, String(coinBalance)); }catch(e){ /* ignore */ }
+}
 function addCoins(n){
   coinBalance += n;
   coinCountEl.textContent = coinBalance;
+  saveCoins();
 }
 function spendCoins(n){
   if(coinBalance < n) return false;
   coinBalance -= n;
   coinCountEl.textContent = coinBalance;
+  saveCoins();
   return true;
 }
 
@@ -1169,9 +1209,9 @@ function switchTab(mode){
 
 /* ---------- Solo mode: silhouette + guesses ---------- */
 const DIFFICULTY = {
-  facile:    {tries:6, hints:3, blurStart:8,  blurStep:1.5, revealBadgesFromStart:true},
-  normal:    {tries:5, hints:2, blurStart:14, blurStep:3,   revealBadgesFromStart:true},
-  difficile: {tries:3, hints:1, blurStart:22, blurStep:4,   revealBadgesFromStart:false}
+  facile:    {tries:9, hints:3, blurStart:8,  blurStep:1.2, revealBadgesFromStart:true},
+  normal:    {tries:6, hints:2, blurStart:14, blurStep:2.5, revealBadgesFromStart:true},
+  difficile: {tries:4, hints:1, blurStart:22, blurStep:4,   revealBadgesFromStart:false}
 };
 let soloDifficulty = 'normal';
 let soloSecret = null;
@@ -1196,6 +1236,34 @@ soloImgToggle.addEventListener('change', ()=>{
 
 function applySoloImageVisibility(){
   silhouettewrapEl.style.display = soloShowImage ? '' : 'none';
+}
+
+const soloPickToggle = document.getElementById('soloPickToggle');
+const soloPickGridEl = document.getElementById('soloPickGrid');
+let soloShowPickGrid = true;
+
+soloPickToggle.addEventListener('change', ()=>{
+  soloShowPickGrid = soloPickToggle.checked;
+  applySoloPickGridVisibility();
+});
+
+function applySoloPickGridVisibility(){
+  soloPickGridEl.style.display = soloShowPickGrid ? '' : 'none';
+}
+
+function renderSoloPickGrid(){
+  if(!soloShowPickGrid){ soloPickGridEl.innerHTML = ''; return; }
+  soloPickGridEl.innerHTML = PLAYERS.map(p=>`
+    <div class="picktile ${soloGuessedIds.has(p.id)?'tried':''}" data-id="${p.id}">
+      <div class="avatar">${avatarInner(p)}</div>
+      <div class="pickname">${p.name}</div>
+    </div>`).join('');
+  soloPickGridEl.querySelectorAll('.picktile:not(.tried)').forEach(el=>{
+    bindTap(el, ()=>{
+      const p = PLAYERS.find(pl=>pl.id===Number(el.dataset.id));
+      if(p) processSoloGuess(p);
+    });
+  });
 }
 const soloBoxesEl = document.getElementById('soloBoxes');
 const soloPoolEl = document.getElementById('soloPool');
@@ -1312,6 +1380,8 @@ function newSoloGame(){
   soloCardEl.className = 'silhouettecard ' + (POS_GROUP_CLASS[soloSecret.pos] || '');
   buildSoloLetterPuzzle();
   applySoloImageVisibility();
+  renderSoloPickGrid();
+  applySoloPickGridVisibility();
 
   if(cfg.revealBadgesFromStart){
     soloEraEl.style.visibility = 'visible';
@@ -1365,14 +1435,20 @@ function soloGuess(){
     soloGuessError.style.display = 'block';
     return;
   }
+  soloInput.value = '';
+  processSoloGuess(found);
+}
+
+function processSoloGuess(found){
+  if(soloTriesLeft<=0) return;
+  soloGuessError.style.display = 'none';
   if(soloGuessedIds.has(found.id)){
     soloGuessError.textContent = 'Déjà essayé — propose un autre nom.';
     soloGuessError.style.display = 'block';
-    soloInput.value = '';
     return;
   }
   soloGuessedIds.add(found.id);
-  soloInput.value = '';
+  renderSoloPickGrid();
 
   const win = found.id === soloSecret.id;
   const row = document.createElement('div');
