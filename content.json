@@ -184,8 +184,8 @@
       "id": 110,
       "name": "P.K. Subban",
       "photo": "https://www.hockeydb.com/ihdb/photos/carey-price-2021-45.jpg"
-    }
-        {
+    },
+    {
       "id": 301,
       "name": "Sidney Crosby",
       "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8471675.webp&w=1920&q=75"
@@ -213,7 +213,7 @@
     {
       "id": 306,
       "name": "Wayne Gretzky",
-      "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8479318.webp&w=1920&q=75"
+      "photo": ""
     },
     {
       "id": 307,
@@ -223,12 +223,12 @@
     {
       "id": 308,
       "name": "Bobby Orr",
-      "photo": "https://www.hockeydb.com/ihdb/photos/mario-lemieux-1996-50.jpg"
+      "photo": ""
     },
     {
       "id": 309,
       "name": "Gordie Howe",
-      "photo": "https://www.hockeydb.com/ihdb/photos/mario-lemieux-1996-50.jpg"
+      "photo": ""
     },
     {
       "id": 310,
@@ -243,17 +243,17 @@
     {
       "id": 312,
       "name": "Steven Stamkos",
-      "photo": "https://www.hockeydb.com/ihdb/photos/jaromir-jagr-2017-234.jpg"
+      "photo": ""
     },
     {
       "id": 313,
       "name": "Nikita Kucherov",
-      "photo": "https://www.hockeydb.com/ihdb/photos/jaromir-jagr-2017-234.jpg"
+      "photo": ""
     },
     {
       "id": 314,
       "name": "Cale Makar",
-      "photo": "https://www.hockeydb.com/ihdb/photos/jaromir-jagr-2017-234.jpg"
+      "photo": ""
     },
     {
       "id": 315,
@@ -268,14 +268,23 @@
     {
       "id": 317,
       "name": "Erik Karlsson",
-      "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8477934.webp&w=1920&q=75"
+      "photo": ""
     },
     {
       "id": 318,
       "name": "Andrei Vasilevskiy",
       "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8476883.webp&w=1920&q=75"
+    },
+    {
+      "id": 319,
+      "name": "Macklin Celebrini",
+      "photo": ""
+    },
+    {
+      "id": 320,
+      "name": "Connor Bedard",
+      "photo": ""
     }
-
   ],
   "questions": []
 }
