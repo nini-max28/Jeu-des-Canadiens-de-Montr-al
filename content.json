@@ -1,4 +1,155 @@
 {
-  "players": [],
+  "players": [
+    {
+      "id": 1,
+      "name": "Nick Suzuki",
+      "photo": ""
+    },
+    {
+      "id": 2,
+      "name": "Cole Caufield",
+      "photo": ""
+    },
+    {
+      "id": 3,
+      "name": "Juraj Slafkovský",
+      "photo": ""
+    },
+    {
+      "id": 4,
+      "name": "Kirby Dach",
+      "photo": ""
+    },
+    {
+      "id": 5,
+      "name": "Lane Hutson",
+      "photo": ""
+    },
+    {
+      "id": 6,
+      "name": "Mike Matheson",
+      "photo": ""
+    },
+    {
+      "id": 7,
+      "name": "Sam Montembeault",
+      "photo": ""
+    },
+    {
+      "id": 8,
+      "name": "Jakub Dobeš",
+      "photo": ""
+    },
+    {
+      "id": 9,
+      "name": "Brendan Gallagher",
+      "photo": ""
+    },
+    {
+      "id": 10,
+      "name": "Josh Anderson",
+      "photo": ""
+    },
+    {
+      "id": 11,
+      "name": "Joel Armia",
+      "photo": ""
+    },
+    {
+      "id": 12,
+      "name": "Arber Xhekaj",
+      "photo": ""
+    },
+    {
+      "id": 13,
+      "name": "Jayden Struble",
+      "photo": ""
+    },
+    {
+      "id": 14,
+      "name": "Alexandre Carrier",
+      "photo": ""
+    },
+    {
+      "id": 15,
+      "name": "Ivan Demidov",
+      "photo": ""
+    },
+    {
+      "id": 16,
+      "name": "Zachary Bolduc",
+      "photo": ""
+    },
+    {
+      "id": 17,
+      "name": "Oliver Kapanen",
+      "photo": ""
+    },
+    {
+      "id": 18,
+      "name": "Alex Newhook",
+      "photo": ""
+    },
+    {
+      "id": 19,
+      "name": "David Reinbacher",
+      "photo": ""
+    },
+    {
+      "id": 20,
+      "name": "Patrik Laine",
+      "photo": ""
+    },
+    {
+      "id": 101,
+      "name": "Maurice Richard",
+      "photo": ""
+    },
+    {
+      "id": 102,
+      "name": "Jean Béliveau",
+      "photo": ""
+    },
+    {
+      "id": 103,
+      "name": "Guy Lafleur",
+      "photo": ""
+    },
+    {
+      "id": 104,
+      "name": "Ken Dryden",
+      "photo": ""
+    },
+    {
+      "id": 105,
+      "name": "Larry Robinson",
+      "photo": ""
+    },
+    {
+      "id": 106,
+      "name": "Bob Gainey",
+      "photo": ""
+    },
+    {
+      "id": 107,
+      "name": "Patrick Roy",
+      "photo": ""
+    },
+    {
+      "id": 108,
+      "name": "Saku Koivu",
+      "photo": ""
+    },
+    {
+      "id": 109,
+      "name": "Carey Price",
+      "photo": ""
+    },
+    {
+      "id": 110,
+      "name": "P.K. Subban",
+      "photo": ""
+    }
+  ],
   "questions": []
 }
