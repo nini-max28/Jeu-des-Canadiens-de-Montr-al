@@ -704,7 +704,7 @@ PLAYERS.forEach(p=>{
 // Contenu à distance (optionnel) : pointe CONTENT_URL vers un fichier JSON hébergé
 // (GitHub raw, Firebase, etc.) pour ajouter des joueurs/questions sans republier l'app.
 // Format attendu : { "players": [ {...mêmes champs que ci-dessus...} ], "questions": [ {"text": "...", "field": "quebec"} ] }
-const CONTENT_URL = ""; // ex: "https://raw.githubusercontent.com/tonpseudo/canadiens-guess-who/main/content.json"
+const CONTENT_URL = "https://raw.githubusercontent.com/nini-max28/Jeu-des-Canadiens-de-Montr-al/main/content.json";
 
 async function loadRemoteContent(){
   if(!CONTENT_URL) return;
