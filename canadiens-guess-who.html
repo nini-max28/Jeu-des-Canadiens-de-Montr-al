@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Qui est-ce — Tricolore</title>
+<style>
+  :root{
+    --rouge: #AF1E2D;
+    --rouge-fonce: #7E1522;
+    --bleu: #16224E;
+    --bleu-clair: #2A3B7A;
+    --glace: #EDF1F5;
+    --acier: #1B2130;
+    --acier-clair: #2B3346;
+    --or: #C9A24B;
+    --texte: #EDF1F5;
+    --texte-att: #9AA4BC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(175,30,45,0.18), transparent 60%),
+      var(--acier);
+    color:var(--texte);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:0 0 120px;}
+
+  /* ---------- Header / scoreboard ---------- */
+  header{
+    padding:28px 20px 22px;
+    text-align:center;
+    position:relative;
+  }
+  .eyebrow{
+    font-size:13px;
+    color:var(--texte-att);
+    letter-spacing:.02em;
+    margin:0 0 6px;
+  }
+  h1{
+    font-family:"Arial Narrow",Arial,sans-serif;
+    font-weight:900;
+    font-stretch:condensed;
+    font-size:44px;
+    line-height:0.95;
+    margin:0;
+    letter-spacing:0.5px;
+    color:var(--glace);
+    text-transform:uppercase;
+    text-shadow:0 2px 0 rgba(0,0,0,0.25);
+  }
+  h1 span{color:var(--rouge);}
+  .centerline{
+    height:3px;
+    margin:20px auto 0;
+    max-width:560px;
+    background:linear-gradient(90deg, transparent, var(--rouge) 15%, var(--rouge) 85%, transparent);
+    position:relative;
+  }
+  .centerline::after{
+    content:"";
+    position:absolute;
+    left:50%;top:50%;
+    width:26px;height:26px;
+    transform:translate(-50%,-50%);
+    border:3px solid var(--rouge);
+    border-radius:50%;
+    background:var(--acier);
+  }
+
+  .statusbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:16px 20px 0;
+    gap:12px;
+  }
+  .pill{
+    background:var(--acier-clair);
+    border-radius:999px;
+    padding:8px 14px;
+    font-size:14px;
+    color:var(--texte-att);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .pill b{color:var(--glace);font-size:16px;}
+  .btn{
+    border:none;
+    cursor:pointer;
+    font-weight:700;
+    border-radius:10px;
+    padding:10px 16px;
+    font-size:14px;
+    transition:transform .12s ease, opacity .12s ease;
+  }
+  .btn:active{transform:scale(0.96);}
+  .btn-primary{background:var(--rouge);color:#fff;}
+  .btn-ghost{background:transparent;color:var(--texte-att);border:1px solid #3A4258;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  /* ---------- Questions panel ---------- */
+  section.panel{
+    margin:22px 16px 0;
+    background:var(--bleu);
+    border-radius:16px;
+    padding:18px 16px 16px;
+    position:relative;
+    overflow:hidden;
+  }
+  section.panel::before{
+    content:"";
+    position:absolute;
+    right:-40px;top:-40px;
+    width:140px;height:140px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,0.06), transparent 70%);
+  }
+  .panel h2{
+    margin:0 0 4px;
+    font-size:15px;
+    font-weight:700;
+    color:var(--glace);
+  }
+  .panel p.sub{
+    margin:0 0 14px;
+    font-size:13px;
+    color:#B7C0DB;
+  }
+  .qgrid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  .qbtn{
+    text-align:left;
+    background:var(--bleu-clair);
+    color:var(--texte);
+    border:none;
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:13px;
+    line-height:1.25;
+    cursor:pointer;
+  }
+  .qbtn:disabled{
+    opacity:.35;
+    cursor:default;
+  }
+  .qbtn:not(:disabled):active{transform:scale(0.98);}
+
+  .answerbox{
+    margin-top:14px;
+    background:var(--acier);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-height:20px;
+  }
+  .answerbox .badge{
+    font-weight:800;
+    font-size:13px;
+    padding:3px 10px;
+    border-radius:999px;
+  }
+  .badge.oui{background:#1E5B3A;color:#B7F0CC;}
+  .badge.non{background:var(--rouge-fonce);color:#F5C6CB;}
+
+  .log{
+    margin-top:10px;
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .25s ease;
+  }
+  .log.open{max-height:300px;overflow-y:auto;}
+  .log-item{
+    font-size:12.5px;
+    color:#9FA9C4;
+    padding:6px 2px;
+    border-top:1px solid #263056;
+  }
+  .log-toggle{
+    background:none;border:none;color:#8FA0D6;font-size:12.5px;
+    cursor:pointer;margin-top:8px;padding:0;
+  }
+
+  /* ---------- Hint ---------- */
+  .hintrow{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:14px;
+  }
+
+  /* ---------- Roster ---------- */
+  .rostertitle{
+    margin:26px 16px 10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+  }
+  .rostertitle h2{
+    font-size:15px;margin:0;color:var(--glace);
+  }
+  .rostertitle span{font-size:12.5px;color:var(--texte-att);}
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:10px;
+    padding:0 16px;
+  }
+  .card{
+    perspective:800px;
+    height:118px;
+  }
+  .cardface{
+    position:relative;
+    width:100%;height:100%;
+    transform-style:preserve-3d;
+    transition:transform .4s cubic-bezier(.2,.8,.3,1);
+  }
+  .card.eliminated .cardface{transform:rotateY(180deg);}
+  .front,.back{
+    position:absolute;inset:0;
+    backface-visibility:hidden;
+    border-radius:12px;
+    display:flex;flex-direction:column;
+    justify-content:space-between;
+    padding:10px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .front{
+    background:var(--acier-clair);
+    border:1px solid #333C54;
+  }
+  .card.selected .front{
+    border:2px solid var(--or);
+  }
+  .back{
+    background:repeating-linear-gradient(45deg, #171C29, #171C29 8px, #1D2434 8px, #1D2434 16px);
+    transform:rotateY(180deg);
+    align-items:center;
+    justify-content:center;
+  }
+  .back span{
+    font-size:11px;
+    color:#5C6785;
+    letter-spacing:.03em;
+  }
+  .avatar{
+    width:38px;height:38px;
+    border-radius:8px;
+    background:linear-gradient(160deg, var(--rouge), var(--rouge-fonce));
+    color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:14px;
+  }
+  .cnum{
+    position:absolute;
+    top:8px;right:10px;
+    font-size:20px;
+    font-weight:900;
+    color:#414C68;
+  }
+  .cname{
+    font-size:13px;
+    font-weight:700;
+    color:var(--glace);
+    line-height:1.15;
+  }
+  .cpos{
+    font-size:11px;
+    color:var(--texte-att);
+  }
+  .era{
+    position:absolute;
+    top:8px;left:10px;
+    font-size:9.5px;
+    font-weight:700;
+    letter-spacing:.02em;
+    padding:2px 6px;
+    border-radius:5px;
+  }
+  .era.actif{background:rgba(30,91,58,0.35);color:#8FE0AE;}
+  .era.legende{background:rgba(201,162,75,0.25);color:var(--or);}
+
+  /* ---------- Footer guess bar ---------- */
+  .guessbar{
+    position:fixed;
+    left:0;right:0;bottom:0;
+    background:linear-gradient(180deg, transparent, var(--acier) 30%);
+    padding:26px 16px 16px;
+  }
+  .guessbar-inner{
+    max-width:608px;margin:0 auto;
+    background:var(--bleu);
+    border-radius:14px;
+    padding:12px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    box-shadow:0 10px 30px rgba(0,0,0,0.35);
+  }
+  .guessbar select{
+    flex:1;
+    background:var(--acier);
+    color:var(--texte);
+    border:1px solid #333C54;
+    border-radius:8px;
+    padding:10px;
+    font-size:14px;
+  }
+
+  /* ---------- Overlay (win) ---------- */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(10,13,22,0.9);
+    display:none;
+    align-items:center;justify-content:center;
+    padding:24px;
+    z-index:20;
+  }
+  .overlay.show{display:flex;}
+  .overlaycard{
+    background:var(--bleu);
+    border-radius:18px;
+    padding:26px 22px 22px;
+    text-align:center;
+    max-width:360px;
+    width:100%;
+  }
+  .overlaycard .avatar{
+    width:64px;height:64px;font-size:24px;margin:0 auto 14px;
+    border-radius:12px;
+  }
+  .overlaycard h3{
+    margin:0 0 4px;font-size:20px;color:var(--glace);
+  }
+  .overlaycard p{
+    margin:0 0 18px;color:#B7C0DB;font-size:13.5px;
+  }
+  .result-tag{
+    display:inline-block;
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:.03em;
+    padding:4px 12px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .result-tag.win{background:#1E5B3A;color:#B7F0CC;}
+  .result-tag.lose{background:var(--rouge-fonce);color:#F5C6CB;}
+
+  @media (min-width:420px){
+    .grid{grid-template-columns:repeat(3,1fr);}
+  }
+
+  /* ---------- Mode tabs ---------- */
+  .tabs{
+    display:flex;
+    gap:8px;
+    padding:0 16px;
+    margin-top:6px;
+  }
+  .tabbtn{
+    flex:1;
+    background:var(--acier-clair);
+    color:var(--texte-att);
+    border:none;
+    border-radius:10px;
+    padding:11px 10px;
+    font-size:13.5px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .tabbtn.active{
+    background:var(--rouge);
+    color:#fff;
+  }
+
+  .coinbar{
+    padding:10px 16px 0;
+    display:flex;
+    justify-content:center;
+  }
+  .coinpill{
+    background:linear-gradient(90deg, rgba(201,162,75,0.18), rgba(201,162,75,0.05));
+    border:1px solid rgba(201,162,75,0.35);
+  }
+  .coinpill b{color:var(--or);}
+
+  /* ---------- Solo silhouette ---------- */
+  .silhouettewrap{padding:20px 16px 0;}
+  .silhouettecard{
+    max-width:220px;
+    margin:0 auto;
+    aspect-ratio:1;
+    border-radius:20px;
+    background:linear-gradient(160deg, var(--rouge), var(--rouge-fonce));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .silhouettecard.pos-defense{background:linear-gradient(160deg, var(--bleu-clair), var(--bleu));}
+  .silhouettecard.pos-goalie{background:linear-gradient(160deg, #7C879E, #454E63);}
+  .silhouettecard .era{top:12px;left:12px;font-size:10.5px;}
+  .continent-badge{
+    position:absolute;
+    top:12px;right:12px;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:.02em;
+    padding:2px 7px;
+    border-radius:5px;
+    background:rgba(255,255,255,0.16);
+    color:#fff;
+  }
+  .silhouettecard::before{
+    content:"";
+    position:absolute;inset:0;
+    background:repeating-linear-gradient(115deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 14px);
+  }
+  .silhouettenum{
+    font-size:96px;
+    font-weight:900;
+    color:rgba(255,255,255,0.92);
+    font-family:"Arial Narrow",Arial,sans-serif;
+    filter:blur(24px);
+    transition:filter .5s ease;
+  }
+  .silhouettepos{
+    position:absolute;
+    bottom:14px;
+    left:0;right:0;
+    text-align:center;
+    font-size:12px;
+    font-weight:700;
+    color:rgba(255,255,255,0.85);
+    letter-spacing:.02em;
+  }
+  .guessrow{
+    background:var(--acier-clair);
+    border-radius:10px;
+    padding:10px 12px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    font-size:13px;
+  }
+  .guessrow .gname{font-weight:700;color:var(--glace);flex:1;}
+  .dots{display:flex;gap:5px;}
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#3A4258;
+  }
+  .dot.hit{background:#3FBF74;}
+  .numhint{font-size:11px;color:var(--texte-att);min-width:34px;text-align:right;}
+
+  .scrambleline{
+    text-align:center;
+    margin:16px 0 0;
+    font-size:22px;
+    font-weight:800;
+    letter-spacing:.14em;
+    color:var(--or);
+    font-family:"Arial Narrow",Arial,sans-serif;
+  }
+
+  .grow-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .wintag{font-size:11px;font-weight:800;color:#8FE0AE;}
+  .sqrow{
+    display:flex;
+    gap:5px;
+    margin-top:8px;
+  }
+  .sq{
+    flex:1;
+    background:#3A4258;
+    border-radius:6px;
+    padding:5px 2px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:2px;
+  }
+  .sq b{font-size:8.5px;font-weight:700;color:#B7C0DB;letter-spacing:.02em;}
+  .sq span{font-size:13px;font-weight:800;color:var(--glace);}
+  .sq.hit{background:#1E5B3A;}
+  .sq.hit b{color:#8FE0AE;}
+  .sq.hit span{color:#B7F0CC;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Un joueur secret. Des questions qui changent à chaque partie. Joueurs actuels et légendes du Tricolore.</p>
+    <h1>Qui est-ce<br><span>du Tricolore</span></h1>
+    <div class="centerline"></div>
+  </header>
+
+  <div class="tabs">
+    <button class="tabbtn active" id="tabDuel">Face à face</button>
+    <button class="tabbtn" id="tabSolo">Solo — Silhouette</button>
+  </div>
+
+  <div class="coinbar">
+    <div class="pill coinpill">Pièces&nbsp;<b id="coinCount">20</b></div>
+  </div>
+
+  <div id="duelMode">
+  <div class="statusbar">
+    <div class="pill">Restants&nbsp;<b id="remCount">20</b></div>
+    <div class="pill">Questions posées&nbsp;<b id="qCount">0</b></div>
+    <button class="btn btn-ghost" id="newGameBtn">Nouvelle partie</button>
+  </div>
+
+  <section class="panel">
+    <h2>Pose une question</h2>
+    <p class="sub">Le joueur secret est choisi. Cliquer une question pour obtenir une réponse par oui ou non.</p>
+    <div class="qgrid" id="qgrid"></div>
+
+    <div class="answerbox" id="answerbox">
+      <span style="color:#8891A8;">Choisis une question pour commencer.</span>
+    </div>
+
+    <button class="log-toggle" id="logToggle">Voir l'historique des réponses ▾</button>
+    <div class="log" id="log"></div>
+
+    <div class="hintrow">
+      <span style="font-size:12.5px;color:#9FA9C4;" id="hintCounter">3 indices restants</span>
+      <button class="btn btn-primary" id="hintBtn" style="background:var(--or);color:#2a2107;">Obtenir un indice</button>
+    </div>
+  </section>
+
+  <div class="rostertitle">
+    <h2>L'alignement</h2>
+    <span>Actuels et légendes — tape une carte pour l'écarter</span>
+  </div>
+  <div class="grid" id="grid"></div>
+  </div>
+
+  <div id="soloMode" style="display:none;">
+    <div class="silhouettewrap">
+      <div class="silhouettecard" id="soloCard">
+        <span class="era" id="soloEra">Actif</span>
+        <span class="continent-badge" id="soloContinent">Amérique du Nord</span>
+        <div class="silhouettenum" id="soloNum">00</div>
+        <div class="silhouettepos" id="soloPos">Attaquant</div>
+      </div>
+      <p class="scrambleline" id="soloScramble"></p>
+      <p class="sub" style="text-align:center;margin:8px 0 0;">Devine le joueur à partir de son numéro flouté et de son nom mélangé. Chaque essai révèle plus d'indices.</p>
+    </div>
+
+    <div class="statusbar">
+      <div class="pill">Essais restants&nbsp;<b id="soloTries">6</b></div>
+      <button class="btn btn-ghost" id="newSoloBtn">Nouvelle partie</button>
+    </div>
+
+    <div class="tabs" style="padding:0 0 4px;">
+      <button class="tabbtn difficulty" id="diffFacile" data-diff="facile">Facile</button>
+      <button class="tabbtn difficulty active" id="diffNormal" data-diff="normal">Normal</button>
+      <button class="tabbtn difficulty" id="diffDifficile" data-diff="difficile">Difficile</button>
+    </div>
+
+    <section class="panel">
+      <h2>Propose un nom</h2>
+      <div style="display:flex;gap:8px;">
+        <input id="soloInput" list="playerList" placeholder="Nom du joueur…" autocomplete="off"
+          style="flex:1;background:var(--acier);color:var(--texte);border:1px solid #333C54;border-radius:8px;padding:10px 12px;font-size:14px;">
+        <button class="btn btn-primary" id="soloGuessBtn">Deviner</button>
+      </div>
+      <datalist id="playerList"></datalist>
+      <p id="soloGuessError" style="display:none;color:#F5C6CB;font-size:12.5px;margin:8px 0 0;"></p>
+
+      <div class="hintrow">
+        <span style="font-size:12.5px;color:#9FA9C4;" id="soloHintCounter">2 indices restants</span>
+        <button class="btn btn-primary" id="soloHintBtn" style="background:var(--or);color:#2a2107;">Obtenir un indice</button>
+      </div>
+      <div class="answerbox" id="soloHintBox" style="display:none;"></div>
+
+      <div id="soloGuesses" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;"></div>
+    </section>
+  </div>
+</div>
+
+<div class="guessbar" id="duelGuessbar">
+  <div class="guessbar-inner">
+    <select id="guessSelect"><option value="">Faire une supposition…</option></select>
+    <button class="btn btn-primary" id="guessBtn">Deviner</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="overlaycard">
+    <div class="result-tag" id="resultTag">GAGNÉ</div>
+    <div class="avatar" id="revealAvatar" style="font-size:22px;"></div>
+    <h3 id="revealName"></h3>
+    <p id="revealSub"></p>
+    <button class="btn btn-primary" id="playAgainBtn">Rejouer</button>
+  </div>
+</div>
+
+<script>
+const CURRENT = [
+  {id:1,name:"Nick Suzuki",num:14,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",captain:"C",quebec:false,tall:false,shootsLeft:false,veteran:true,firstRound:true},
+  {id:2,name:"Cole Caufield",num:22,pos:"AD",posLabel:"Ailier droit",country:"États-Unis",continent:"Amérique du Nord",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:true,firstRound:true},
+  {id:3,name:"Juraj Slafkovský",num:20,pos:"AG",posLabel:"Ailier gauche",country:"Slovaquie",continent:"Europe",captain:null,quebec:false,tall:true,shootsLeft:true,veteran:false,firstRound:true},
+  {id:4,name:"Kirby Dach",num:77,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:true,shootsLeft:true,veteran:true,firstRound:true},
+  {id:5,name:"Lane Hutson",num:48,pos:"D",posLabel:"Défenseur",country:"États-Unis",continent:"Amérique du Nord",captain:null,quebec:false,tall:false,shootsLeft:true,veteran:false,firstRound:false},
+  {id:6,name:"Mike Matheson",num:8,pos:"D",posLabel:"Défenseur",country:"Canada",continent:"Amérique du Nord",captain:"A",quebec:false,tall:true,shootsLeft:true,veteran:true,firstRound:true},
+  {id:7,name:"Sam Montembeault",num:35,pos:"G",posLabel:"Gardien",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:true,tall:true,shootsLeft:false,veteran:true,firstRound:false},
+  {id:8,name:"Jakub Dobeš",num:75,pos:"G",posLabel:"Gardien",country:"Tchéquie",continent:"Europe",captain:null,quebec:false,tall:true,shootsLeft:false,veteran:false,firstRound:false},
+  {id:9,name:"Brendan Gallagher",num:11,pos:"AD",posLabel:"Ailier droit",country:"Canada",continent:"Amérique du Nord",captain:"A",quebec:false,tall:false,shootsLeft:false,veteran:true,firstRound:false},
+  {id:10,name:"Josh Anderson",num:17,pos:"AD",posLabel:"Ailier droit",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:true,shootsLeft:false,veteran:true,firstRound:false},
+  {id:11,name:"Joel Armia",num:40,pos:"AD",posLabel:"Ailier droit",country:"Finlande",continent:"Europe",captain:null,quebec:false,tall:true,shootsLeft:false,veteran:true,firstRound:true},
+  {id:12,name:"Arber Xhekaj",num:72,pos:"D",posLabel:"Défenseur",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:true,shootsLeft:true,veteran:false,firstRound:false},
+  {id:13,name:"Jayden Struble",num:21,pos:"D",posLabel:"Défenseur",country:"États-Unis",continent:"Amérique du Nord",captain:null,quebec:false,tall:false,shootsLeft:true,veteran:false,firstRound:false},
+  {id:14,name:"Alexandre Carrier",num:45,pos:"D",posLabel:"Défenseur",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:true,tall:false,shootsLeft:false,veteran:true,firstRound:false},
+  {id:15,name:"Ivan Demidov",num:93,pos:"AD",posLabel:"Ailier droit",country:"Russie",continent:"Europe",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:false,firstRound:true},
+  {id:16,name:"Zachary Bolduc",num:76,pos:"AG",posLabel:"Ailier gauche",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:true,tall:false,shootsLeft:true,veteran:false,firstRound:true},
+  {id:17,name:"Oliver Kapanen",num:25,pos:"C",posLabel:"Centre",country:"Finlande",continent:"Europe",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:false,firstRound:false},
+  {id:18,name:"Alex Newhook",num:15,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:false,shootsLeft:true,veteran:true,firstRound:true},
+  {id:19,name:"David Reinbacher",num:92,pos:"D",posLabel:"Défenseur",country:"Autriche",continent:"Europe",captain:null,quebec:false,tall:true,shootsLeft:false,veteran:false,firstRound:true},
+  {id:20,name:"Patrik Laine",num:29,pos:"AD",posLabel:"Ailier droit",country:"Finlande",continent:"Europe",captain:null,quebec:false,tall:true,shootsLeft:false,veteran:true,firstRound:true}
+].map(p=>({...p, active:true, numberRetired:false, hallOfFame:false, stanleyCup:false, before1980:false, era:"Actif"}));
+
+const LEGENDS = [
+  {id:101,name:"Maurice Richard",num:9,pos:"AD",posLabel:"Ailier droit",country:"Canada",continent:"Amérique du Nord",captain:"C",quebec:true,tall:false,shootsLeft:false,veteran:true,firstRound:false,active:false,numberRetired:true,hallOfFame:true,stanleyCup:true,before1980:true,era:"Légende"},
+  {id:102,name:"Jean Béliveau",num:4,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",captain:"C",quebec:true,tall:true,shootsLeft:true,veteran:true,firstRound:false,active:false,numberRetired:true,hallOfFame:true,stanleyCup:true,before1980:true,era:"Légende"},
+  {id:103,name:"Guy Lafleur",num:10,pos:"AD",posLabel:"Ailier droit",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:true,tall:false,shootsLeft:false,veteran:true,firstRound:true,active:false,numberRetired:true,hallOfFame:true,stanleyCup:true,before1980:true,era:"Légende"},
+  {id:104,name:"Ken Dryden",num:29,pos:"G",posLabel:"Gardien",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:true,shootsLeft:true,veteran:true,firstRound:false,active:false,numberRetired:true,hallOfFame:true,stanleyCup:true,before1980:true,era:"Légende"},
+  {id:105,name:"Larry Robinson",num:19,pos:"D",posLabel:"Défenseur",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:true,shootsLeft:true,veteran:true,firstRound:false,active:false,numberRetired:true,hallOfFame:true,stanleyCup:true,before1980:true,era:"Légende"},
+  {id:106,name:"Bob Gainey",num:23,pos:"AG",posLabel:"Ailier gauche",country:"Canada",continent:"Amérique du Nord",captain:"C",quebec:false,tall:true,shootsLeft:true,veteran:true,firstRound:true,active:false,numberRetired:true,hallOfFame:true,stanleyCup:true,before1980:true,era:"Légende"},
+  {id:107,name:"Patrick Roy",num:33,pos:"G",posLabel:"Gardien",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:true,tall:true,shootsLeft:true,veteran:true,firstRound:false,active:false,numberRetired:true,hallOfFame:true,stanleyCup:true,before1980:false,era:"Légende"},
+  {id:108,name:"Saku Koivu",num:11,pos:"C",posLabel:"Centre",country:"Finlande",continent:"Europe",captain:"C",quebec:false,tall:false,shootsLeft:true,veteran:true,firstRound:true,active:false,numberRetired:false,hallOfFame:false,stanleyCup:false,before1980:false,era:"Légende"},
+  {id:109,name:"Carey Price",num:31,pos:"G",posLabel:"Gardien",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:true,shootsLeft:true,veteran:true,firstRound:true,active:false,numberRetired:true,hallOfFame:false,stanleyCup:false,before1980:false,era:"Légende"},
+  {id:110,name:"P.K. Subban",num:76,pos:"D",posLabel:"Défenseur",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:true,firstRound:false,active:false,numberRetired:false,hallOfFame:false,stanleyCup:false,before1980:false,era:"Légende"}
+];
+
+const PLAYERS = [...CURRENT, ...LEGENDS];
+
+const EXTRA_INFO = {
+  1:{birthYear:1999,start:2019,end:null,cups:0},
+  2:{birthYear:2001,start:2021,end:null,cups:0},
+  3:{birthYear:2004,start:2022,end:null,cups:0},
+  4:{birthYear:2001,start:2022,end:null,cups:0},
+  5:{birthYear:2004,start:2024,end:null,cups:0},
+  6:{birthYear:1994,start:2022,end:null,cups:0},
+  7:{birthYear:1996,start:2021,end:null,cups:0},
+  8:{birthYear:2003,start:2024,end:null,cups:0},
+  9:{birthYear:1992,start:2012,end:null,cups:0},
+  10:{birthYear:1994,start:2020,end:null,cups:0},
+  11:{birthYear:1993,start:2018,end:null,cups:0},
+  12:{birthYear:2001,start:2022,end:null,cups:0},
+  13:{birthYear:2001,start:2023,end:null,cups:0},
+  14:{birthYear:1997,start:2023,end:null,cups:0},
+  15:{birthYear:2005,start:2025,end:null,cups:0},
+  16:{birthYear:2003,start:2023,end:null,cups:0},
+  17:{birthYear:2004,start:2024,end:null,cups:0},
+  18:{birthYear:2001,start:2023,end:null,cups:0},
+  19:{birthYear:2004,start:2025,end:null,cups:0},
+  20:{birthYear:1998,start:2025,end:null,cups:0},
+  101:{birthYear:1921,start:1942,end:1960,cups:8},
+  102:{birthYear:1931,start:1950,end:1971,cups:10},
+  103:{birthYear:1951,start:1971,end:1985,cups:5},
+  104:{birthYear:1947,start:1971,end:1979,cups:6},
+  105:{birthYear:1951,start:1972,end:1989,cups:6},
+  106:{birthYear:1953,start:1973,end:1989,cups:5},
+  107:{birthYear:1965,start:1984,end:1995,cups:2},
+  108:{birthYear:1974,start:1995,end:2009,cups:0},
+  109:{birthYear:1987,start:2007,end:2024,cups:0},
+  110:{birthYear:1989,start:2010,end:2016,cups:0}
+};
+PLAYERS.forEach(p=>{
+  const e = EXTRA_INFO[p.id];
+  if(e){
+    p.birthYear = e.birthYear;
+    p.tenureStart = e.start;
+    p.tenureEnd = e.end;
+    p.tenureLabel = e.end ? `${e.start}\u2013${e.end}` : `${e.start}\u2013pr\u00e9sent`;
+    p.cups = e.cups;
+  }
+});
+
+// Contenu à distance (optionnel) : pointe CONTENT_URL vers un fichier JSON hébergé
+// (GitHub raw, Firebase, etc.) pour ajouter des joueurs/questions sans republier l'app.
+// Format attendu : { "players": [ {...mêmes champs que ci-dessus...} ], "questions": [ {"text": "...", "field": "quebec"} ] }
+const CONTENT_URL = ""; // ex: "https://raw.githubusercontent.com/tonpseudo/canadiens-guess-who/main/content.json"
+
+async function loadRemoteContent(){
+  if(!CONTENT_URL) return;
+  try{
+    const res = await fetch(CONTENT_URL, {cache:"no-store"});
+    if(!res.ok) return;
+    const data = await res.json();
+    if(Array.isArray(data.players)){
+      data.players.forEach(p=>{
+        if(!PLAYERS.some(existing=>existing.id===p.id)) PLAYERS.push(p);
+      });
+    }
+    if(Array.isArray(data.questions)){
+      data.questions.forEach(q=>{
+        if(typeof q.field === "string" && typeof q.text === "string"){
+          QUESTION_POOL.push({text:q.text, test:p=>Boolean(p[q.field])});
+        }
+      });
+    }
+  }catch(e){
+    // Pas de connexion ou fichier absent : le jeu continue avec le contenu local.
+  }
+}
+
+const QUESTION_POOL = [
+  {text:"Est-ce un attaquant (centre ou ailier)?", test:p=>["C","AD","AG"].includes(p.pos)},
+  {text:"Est-ce un défenseur?", test:p=>p.pos==="D"},
+  {text:"Est-ce un gardien de but?", test:p=>p.pos==="G"},
+  {text:"Joue-t-il à l'aile (gauche ou droite)?", test:p=>["AD","AG"].includes(p.pos)},
+  {text:"A-t-il été repêché au 1er tour?", test:p=>p.firstRound},
+  {text:"Porte-t-il le C ou le A sur son chandail?", test:p=>p.captain!==null},
+  {text:"Est-il né au Québec?", test:p=>p.quebec},
+  {text:"Est-il né en Europe?", test:p=>p.continent==="Europe"},
+  {text:"Est-il originaire du Canada?", test:p=>p.country==="Canada"},
+  {text:"Est-il originaire de la Finlande?", test:p=>p.country==="Finlande"},
+  {text:"Mesure-t-il 6 pi 2 po ou plus?", test:p=>p.tall},
+  {text:"Tire-t-il (ou attrape) de la gauche?", test:p=>p.shootsLeft},
+  {text:"A-t-il 5 saisons ou plus dans la LNH?", test:p=>p.veteran},
+  {text:"Son numéro est-il plus grand que 50?", test:p=>p.num>50},
+  {text:"Son numéro est-il un chiffre pair?", test:p=>p.num%2===0},
+  {text:"Son numéro porte-t-il un seul chiffre (moins de 10)?", test:p=>p.num<10},
+  {text:"Son prénom commence-t-il par une voyelle?", test:p=>"AEIOU".includes(p.name.trim()[0].toUpperCase())},
+  {text:"Son nom de famille compte-t-il plus de 7 lettres?", test:p=>{const parts=p.name.split(' ');const last=parts[parts.length-1].replace(/[^A-Za-zÀ-ÿ]/g,'');return last.length>7;}},
+  {text:"Joue-t-il toujours activement pour le CH aujourd'hui?", test:p=>p.active},
+  {text:"Son numéro a-t-il été retiré par l'organisation?", test:p=>p.numberRetired},
+  {text:"Est-il membre du Temple de la renommée du hockey?", test:p=>p.hallOfFame},
+  {text:"A-t-il remporté au moins une Coupe Stanley avec le CH?", test:p=>p.stanleyCup},
+  {text:"A-t-il joué dans la LNH avant 1980?", test:p=>p.before1980}
+];
+let QUESTIONS = [];
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+const HINTS = [
+  p=>`Il porte le numéro ${p.num}.`,
+  p=>`Il joue à la position de ${p.posLabel.toLowerCase()}.`,
+  p=>`Il est originaire de ${p.country}.`,
+  p=>p.captain ? `Il porte une lettre (${p.captain}) sur son chandail.` : `Il ne porte pas de lettre sur son chandail.`,
+  p=>p.veteran ? `C'est un vétéran de la LNH.` : `C'est un jeune joueur, encore tôt dans sa carrière LNH.`
+];
+
+let secret = null;
+let eliminated = new Set();
+let selectedId = null;
+let askedIdx = new Set();
+let hintsLeft = 3;
+
+/* ---------- Coin economy ---------- */
+const HINT_COST = 5;
+let coinBalance = 20;
+const coinCountEl = document.getElementById('coinCount');
+function addCoins(n){
+  coinBalance += n;
+  coinCountEl.textContent = coinBalance;
+}
+function spendCoins(n){
+  if(coinBalance < n) return false;
+  coinBalance -= n;
+  coinCountEl.textContent = coinBalance;
+  return true;
+}
+
+const gridEl = document.getElementById('grid');
+const qgridEl = document.getElementById('qgrid');
+const answerbox = document.getElementById('answerbox');
+const logEl = document.getElementById('log');
+const remCount = document.getElementById('remCount');
+const qCount = document.getElementById('qCount');
+const guessSelect = document.getElementById('guessSelect');
+const hintCounter = document.getElementById('hintCounter');
+const hintBtn = document.getElementById('hintBtn');
+
+function initials(name){
+  return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+}
+
+function renderRoster(){
+  gridEl.innerHTML = '';
+  guessSelect.innerHTML = '<option value="">Faire une supposition…</option>';
+  PLAYERS.forEach(p=>{
+    const card = document.createElement('div');
+    card.className = 'card' + (eliminated.has(p.id)?' eliminated':'') + (selectedId===p.id?' selected':'');
+    card.innerHTML = `
+      <div class="cardface">
+        <div class="front" data-id="${p.id}">
+          <span class="era ${p.active?'actif':'legende'}">${p.active?'Actif':'Légende'}</span>
+          <span class="cnum">${p.num}</span>
+          <div class="avatar">${initials(p.name)}</div>
+          <div>
+            <div class="cname">${p.name}</div>
+            <div class="cpos">${p.posLabel}</div>
+          </div>
+        </div>
+        <div class="back"><span>écarté</span></div>
+      </div>`;
+    card.querySelector('.front').addEventListener('click', ()=>toggleEliminate(p.id));
+    gridEl.appendChild(card);
+
+    if(!eliminated.has(p.id)){
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = `#${p.num} ${p.name}`;
+      guessSelect.appendChild(opt);
+    }
+  });
+  remCount.textContent = PLAYERS.length - eliminated.size;
+}
+
+function toggleEliminate(id){
+  if(eliminated.has(id)) eliminated.delete(id);
+  else eliminated.add(id);
+  renderRoster();
+}
+
+function renderQuestions(){
+  qgridEl.innerHTML = '';
+  QUESTIONS.forEach((q, idx)=>{
+    const b = document.createElement('button');
+    b.className = 'qbtn';
+    b.textContent = q.text;
+    b.disabled = askedIdx.has(idx);
+    b.addEventListener('click', ()=>askQuestion(idx));
+    qgridEl.appendChild(b);
+  });
+}
+
+function askQuestion(idx){
+  if(askedIdx.has(idx)) return;
+  askedIdx.add(idx);
+  const q = QUESTIONS[idx];
+  const answer = q.test(secret);
+  answerbox.innerHTML = `<span class="badge ${answer?'oui':'non'}">${answer?'Oui':'Non'}</span><span>${q.text}</span>`;
+  const item = document.createElement('div');
+  item.className = 'log-item';
+  item.textContent = `${answer?'Oui':'Non'} — ${q.text}`;
+  logEl.prepend(item);
+  qCount.textContent = askedIdx.size;
+  renderQuestions();
+}
+
+document.getElementById('logToggle').addEventListener('click', ()=>{
+  const open = logEl.classList.toggle('open');
+  document.getElementById('logToggle').textContent = open ? "Masquer l'historique ▴" : "Voir l'historique des réponses ▾";
+});
+
+function updateHintButton(){
+  if(hintsLeft > 0){
+    hintBtn.textContent = 'Obtenir un indice';
+    hintBtn.disabled = false;
+    hintCounter.textContent = `${hintsLeft} indice${hintsLeft!==1?'s':''} restant${hintsLeft!==1?'s':''}`;
+  } else {
+    hintBtn.textContent = `Acheter un indice (${HINT_COST} pièces)`;
+    hintBtn.disabled = coinBalance < HINT_COST;
+    hintCounter.textContent = 'Indices gratuits épuisés';
+  }
+}
+
+hintBtn.addEventListener('click', ()=>{
+  if(hintsLeft > 0){
+    hintsLeft--;
+  } else {
+    if(!spendCoins(HINT_COST)) return;
+  }
+  const hintFn = HINTS[Math.floor(Math.random()*HINTS.length)];
+  answerbox.innerHTML = `<span class="badge" style="background:var(--or);color:#2a2107;">Indice</span><span>${hintFn(secret)}</span>`;
+  updateHintButton();
+});
+
+document.getElementById('guessBtn').addEventListener('click', ()=>{
+  const val = guessSelect.value;
+  if(!val){
+    answerbox.innerHTML = `<span style="color:#F5C6CB;">Choisis d'abord un joueur dans la liste déroulante.</span>`;
+    return;
+  }
+  const guess = PLAYERS.find(p=>p.id===Number(val));
+  const win = guess.id === secret.id;
+  addCoins(win ? 12 : 3);
+  updateHintButton();
+  showResult(win);
+});
+
+let lastResultMode = 'duel';
+function showResult(win, who, mode){
+  const player = who || secret;
+  lastResultMode = mode || 'duel';
+  const overlay = document.getElementById('overlay');
+  const tag = document.getElementById('resultTag');
+  tag.textContent = win ? 'GAGNÉ' : 'RATÉ';
+  tag.className = 'result-tag ' + (win?'win':'lose');
+  document.getElementById('revealAvatar').textContent = initials(player.name);
+  document.getElementById('revealName').textContent = `#${player.num} ${player.name}`;
+  document.getElementById('revealSub').textContent = win
+    ? `Bien joué — c'était bien lui.`
+    : `Le joueur secret était ${player.name}. Retente ta chance.`;
+  overlay.classList.add('show');
+}
+
+document.getElementById('playAgainBtn').addEventListener('click', ()=>{
+  document.getElementById('overlay').classList.remove('show');
+  if(lastResultMode === 'solo') newSoloGame(); else newGame();
+});
+document.getElementById('newGameBtn').addEventListener('click', newGame);
+
+function newGame(){
+  secret = PLAYERS[Math.floor(Math.random()*PLAYERS.length)];
+  QUESTIONS = shuffle(QUESTION_POOL).slice(0, 12);
+  eliminated = new Set();
+  selectedId = null;
+  askedIdx = new Set();
+  hintsLeft = 3;
+  updateHintButton();
+  qCount.textContent = 0;
+  answerbox.innerHTML = `<span style="color:#8891A8;">Choisis une question pour commencer.</span>`;
+  logEl.innerHTML = '';
+  logEl.classList.remove('open');
+  document.getElementById('logToggle').textContent = "Voir l'historique des réponses ▾";
+  renderRoster();
+  renderQuestions();
+}
+/* ---------- Mode tabs ---------- */
+const tabDuel = document.getElementById('tabDuel');
+const tabSolo = document.getElementById('tabSolo');
+const duelMode = document.getElementById('duelMode');
+const soloModeEl = document.getElementById('soloMode');
+const duelGuessbar = document.getElementById('duelGuessbar');
+
+tabDuel.addEventListener('click', ()=>switchTab('duel'));
+tabSolo.addEventListener('click', ()=>switchTab('solo'));
+
+function switchTab(mode){
+  const isDuel = mode === 'duel';
+  tabDuel.classList.toggle('active', isDuel);
+  tabSolo.classList.toggle('active', !isDuel);
+  duelMode.style.display = isDuel ? '' : 'none';
+  soloModeEl.style.display = isDuel ? 'none' : '';
+  duelGuessbar.style.display = isDuel ? '' : 'none';
+  if(!isDuel && !soloSecret) newSoloGame();
+}
+
+/* ---------- Solo mode: silhouette + guesses ---------- */
+const DIFFICULTY = {
+  facile:    {tries:8, hints:3, blurStart:8,  blurStep:1.5, revealBadgesFromStart:true},
+  normal:    {tries:6, hints:2, blurStart:14, blurStep:3,   revealBadgesFromStart:true},
+  difficile: {tries:4, hints:1, blurStart:22, blurStep:4,   revealBadgesFromStart:false}
+};
+let soloDifficulty = 'normal';
+let soloSecret = null;
+let soloTriesLeft = 6;
+let soloHintsLeft = 2;
+let soloGuessedIds = new Set();
+
+const soloNumEl = document.getElementById('soloNum');
+const soloCardEl = document.getElementById('soloCard');
+const soloEraEl = document.getElementById('soloEra');
+const soloContinentEl = document.getElementById('soloContinent');
+const soloPosEl = document.getElementById('soloPos');
+const soloScrambleEl = document.getElementById('soloScramble');
+const soloTriesEl = document.getElementById('soloTries');
+const soloInput = document.getElementById('soloInput');
+const soloGuessesEl = document.getElementById('soloGuesses');
+const soloHintBtn = document.getElementById('soloHintBtn');
+const soloHintCounter = document.getElementById('soloHintCounter');
+const soloHintBox = document.getElementById('soloHintBox');
+const soloGuessError = document.getElementById('soloGuessError');
+const playerListEl = document.getElementById('playerList');
+
+const POS_GROUP_CLASS = {C:'', AD:'', AG:'', D:'pos-defense', G:'pos-goalie'};
+
+document.querySelectorAll('.difficulty').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    soloDifficulty = btn.dataset.diff;
+    document.querySelectorAll('.difficulty').forEach(b=>b.classList.toggle('active', b===btn));
+    newSoloGame();
+  });
+});
+
+function scrambleName(name){
+  return name.split(' ').map(word=>shuffle(word.split(''))).map(letters=>letters.join('')).join('   ');
+}
+
+function arrowCompare(foundVal, secretVal){
+  if(foundVal === secretVal) return {sym:'\u2713', hit:true};
+  return {sym: secretVal > foundVal ? '\u2191' : '\u2193', hit:false};
+}
+
+function populatePlayerList(){
+  playerListEl.innerHTML = PLAYERS.map(p=>`<option value="${p.name}">`).join('');
+}
+
+function newSoloGame(){
+  const cfg = DIFFICULTY[soloDifficulty];
+  soloSecret = PLAYERS[Math.floor(Math.random()*PLAYERS.length)];
+  soloTriesLeft = cfg.tries;
+  soloHintsLeft = cfg.hints;
+  soloGuessedIds = new Set();
+  soloTriesEl.textContent = soloTriesLeft;
+
+  soloNumEl.textContent = soloSecret.num;
+  soloNumEl.style.filter = `blur(${cfg.blurStart}px)`;
+  soloCardEl.className = 'silhouettecard ' + (POS_GROUP_CLASS[soloSecret.pos] || '');
+
+  if(cfg.revealBadgesFromStart){
+    soloEraEl.style.visibility = 'visible';
+    soloContinentEl.style.visibility = 'visible';
+    soloPosEl.style.visibility = 'visible';
+    soloScrambleEl.textContent = scrambleName(soloSecret.name).toUpperCase();
+  } else {
+    soloEraEl.style.visibility = 'hidden';
+    soloContinentEl.style.visibility = 'hidden';
+    soloPosEl.style.visibility = 'hidden';
+    soloScrambleEl.textContent = '? ? ? ? ?';
+  }
+  soloEraEl.textContent = soloSecret.active ? 'Actif' : 'Légende';
+  soloEraEl.className = 'era ' + (soloSecret.active ? 'actif' : 'legende');
+  soloContinentEl.textContent = soloSecret.continent;
+  soloPosEl.textContent = soloSecret.posLabel;
+
+  soloInput.value = '';
+  soloGuessesEl.innerHTML = '';
+  soloGuessError.style.display = 'none';
+  updateSoloHintButton();
+  soloHintBox.style.display = 'none';
+  populatePlayerList();
+}
+
+function revealSoloBadges(){
+  soloEraEl.style.visibility = 'visible';
+  soloContinentEl.style.visibility = 'visible';
+  soloPosEl.style.visibility = 'visible';
+  soloScrambleEl.textContent = scrambleName(soloSecret.name).toUpperCase();
+}
+
+function updateSoloBlur(){
+  const cfg = DIFFICULTY[soloDifficulty];
+  const usedTries = cfg.tries - soloTriesLeft;
+  const blurPx = Math.max(0, cfg.blurStart - usedTries * cfg.blurStep);
+  soloNumEl.style.filter = `blur(${blurPx}px)`;
+}
+
+function soloGuess(){
+  const raw = soloInput.value.trim();
+  soloGuessError.style.display = 'none';
+  if(soloTriesLeft<=0) return;
+  if(!raw){
+    soloGuessError.textContent = 'Écris un nom avant de deviner.';
+    soloGuessError.style.display = 'block';
+    return;
+  }
+  const found = PLAYERS.find(p=>p.name.toLowerCase() === raw.toLowerCase());
+  if(!found){
+    soloGuessError.textContent = `« ${raw} » ne correspond à aucun joueur de la liste. Vérifie l'orthographe exacte.`;
+    soloGuessError.style.display = 'block';
+    return;
+  }
+  if(soloGuessedIds.has(found.id)){
+    soloGuessError.textContent = 'Déjà essayé — propose un autre nom.';
+    soloGuessError.style.display = 'block';
+    soloInput.value = '';
+    return;
+  }
+  soloGuessedIds.add(found.id);
+  soloInput.value = '';
+
+  const win = found.id === soloSecret.id;
+  const row = document.createElement('div');
+  row.className = 'guessrow';
+  const posHit = found.pos === soloSecret.pos;
+  const countryHit = found.country === soloSecret.country;
+  const born = arrowCompare(found.birthYear, soloSecret.birthYear);
+  const tenure = arrowCompare(found.tenureStart, soloSecret.tenureStart);
+  const cupsCmp = arrowCompare(found.cups, soloSecret.cups);
+  row.innerHTML = `
+    <div class="grow-top">
+      <span class="gname">${found.name}</span>
+      ${win ? '<span class="wintag">✓ Trouvé</span>' : ''}
+    </div>
+    <div class="sqrow">
+      <div class="sq ${posHit?'hit':''}"><b>POS</b><span>${posHit?'✓':'✗'}</span></div>
+      <div class="sq ${countryHit?'hit':''}"><b>PAYS</b><span>${countryHit?'✓':'✗'}</span></div>
+      <div class="sq ${born.hit?'hit':''}"><b>NÉ</b><span>${born.sym}</span></div>
+      <div class="sq ${tenure.hit?'hit':''}"><b>CH</b><span>${tenure.sym}</span></div>
+      <div class="sq ${cupsCmp.hit?'hit':''}"><b>COUPES</b><span>${cupsCmp.sym}</span></div>
+    </div>`;
+  soloGuessesEl.prepend(row);
+
+  if(win){
+    soloNumEl.style.filter = 'blur(0px)';
+    addCoins(10 + soloTriesLeft*2);
+    updateSoloHintButton();
+    showResult(true, soloSecret, 'solo');
+    return;
+  }
+
+  soloTriesLeft--;
+  soloTriesEl.textContent = soloTriesLeft;
+  updateSoloBlur();
+  if(!DIFFICULTY[soloDifficulty].revealBadgesFromStart) revealSoloBadges();
+  if(soloTriesLeft<=0){
+    soloNumEl.style.filter = 'blur(0px)';
+    addCoins(3);
+    updateSoloHintButton();
+    showResult(false, soloSecret, 'solo');
+  }
+}
+
+document.getElementById('soloGuessBtn').addEventListener('click', soloGuess);
+soloInput.addEventListener('keydown', e=>{ if(e.key==='Enter') soloGuess(); });
+document.getElementById('newSoloBtn').addEventListener('click', newSoloGame);
+
+function updateSoloHintButton(){
+  if(soloHintsLeft > 0){
+    soloHintBtn.textContent = 'Obtenir un indice';
+    soloHintBtn.disabled = false;
+    soloHintCounter.textContent = `${soloHintsLeft} indice${soloHintsLeft!==1?'s':''} restant${soloHintsLeft!==1?'s':''}`;
+  } else {
+    soloHintBtn.textContent = `Acheter un indice (${HINT_COST} pièces)`;
+    soloHintBtn.disabled = coinBalance < HINT_COST;
+    soloHintCounter.textContent = 'Indices gratuits épuisés';
+  }
+}
+
+soloHintBtn.addEventListener('click', ()=>{
+  if(soloHintsLeft > 0){
+    soloHintsLeft--;
+  } else {
+    if(!spendCoins(HINT_COST)) return;
+  }
+  const hintFn = HINTS[Math.floor(Math.random()*HINTS.length)];
+  soloHintBox.style.display = 'flex';
+  soloHintBox.innerHTML = `<span class="badge" style="background:var(--or);color:#2a2107;">Indice</span><span>${hintFn(soloSecret)}</span>`;
+  updateSoloHintButton();
+});
+
+async function init(){
+
+  await loadRemoteContent();
+  newGame();
+}
+init();
+</script>
+</body>
+</html>
