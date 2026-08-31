@@ -794,7 +794,7 @@
 <script>
 const CURRENT = [
   {id:1,name:"Nick Suzuki",num:14,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",captain:"C",quebec:false,tall:false,shootsLeft:false,veteran:true,firstRound:true},
-  {id:2,name:"Cole Caufield",num:22,pos:"AD",posLabel:"Ailier droit",country:"États-Unis",continent:"Amérique du Nord",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:true,firstRound:true},
+  {id:2,name:"Cole Caufield",num:13,pos:"AD",posLabel:"Ailier droit",country:"États-Unis",continent:"Amérique du Nord",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:true,firstRound:true},
   {id:3,name:"Juraj Slafkovský",num:20,pos:"AG",posLabel:"Ailier gauche",country:"Slovaquie",continent:"Europe",captain:null,quebec:false,tall:true,shootsLeft:true,veteran:false,firstRound:true},
   {id:4,name:"Kirby Dach",num:77,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:true,shootsLeft:true,veteran:true,firstRound:true},
   {id:5,name:"Lane Hutson",num:48,pos:"D",posLabel:"Défenseur",country:"États-Unis",continent:"Amérique du Nord",captain:null,quebec:false,tall:false,shootsLeft:true,veteran:false,firstRound:false},
@@ -812,7 +812,14 @@ const CURRENT = [
   {id:17,name:"Oliver Kapanen",num:25,pos:"C",posLabel:"Centre",country:"Finlande",continent:"Europe",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:false,firstRound:false},
   {id:18,name:"Alex Newhook",num:15,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:false,shootsLeft:true,veteran:true,firstRound:true},
   {id:19,name:"David Reinbacher",num:92,pos:"D",posLabel:"Défenseur",country:"Autriche",continent:"Europe",captain:null,quebec:false,tall:true,shootsLeft:false,veteran:false,firstRound:true},
-  {id:20,name:"Patrik Laine",num:29,pos:"AD",posLabel:"Ailier droit",country:"Finlande",continent:"Europe",captain:null,quebec:false,tall:true,shootsLeft:false,veteran:true,firstRound:true}
+  {id:20,name:"Patrik Laine",num:29,pos:"AD",posLabel:"Ailier droit",country:"Finlande",continent:"Europe",captain:null,quebec:false,tall:true,shootsLeft:false,veteran:true,firstRound:true},
+  {id:21,name:"Kaiden Guhle",num:21,pos:"D",posLabel:"Défenseur",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:true,shootsLeft:true,veteran:true,firstRound:true},
+  {id:22,name:"Noah Dobson",num:53,pos:"D",posLabel:"Défenseur",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:true,shootsLeft:false,veteran:true,firstRound:true},
+  {id:23,name:"Jacob Fowler",num:32,pos:"G",posLabel:"Gardien",country:"États-Unis",continent:"Amérique du Nord",captain:null,quebec:false,tall:true,shootsLeft:true,veteran:false,firstRound:false},
+  {id:24,name:"Alexandre Texier",num:85,pos:"AG",posLabel:"Ailier gauche",country:"France",continent:"Europe",captain:null,quebec:false,tall:false,shootsLeft:true,veteran:true,firstRound:false},
+  {id:25,name:"Jake Evans",num:71,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:true,firstRound:false},
+  {id:26,name:"Phillip Danault",num:24,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:true,tall:true,shootsLeft:true,veteran:true,firstRound:true},
+  {id:27,name:"Florian Xhekaj",num:60,pos:"AG",posLabel:"Ailier gauche",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:true,shootsLeft:true,veteran:false,firstRound:false}
 ].map(p=>({...p, active:true, numberRetired:false, hallOfFame:false, stanleyCup:false, before1980:false, era:"Actif", team:"Canadiens"}));
 
 const LEGENDS = [
@@ -851,6 +858,13 @@ const EXTRA_INFO = {
   18:{birthYear:2001,start:2023,end:null,cups:0},
   19:{birthYear:2004,start:2025,end:null,cups:0},
   20:{birthYear:1998,start:2025,end:null,cups:0},
+  21:{birthYear:2002,start:2022,end:null,cups:0},
+  22:{birthYear:2000,start:2025,end:null,cups:0},
+  23:{birthYear:2004,start:2025,end:null,cups:0},
+  24:{birthYear:1999,start:2025,end:null,cups:0},
+  25:{birthYear:1996,start:2018,end:null,cups:0},
+  26:{birthYear:1993,start:2025,end:null,cups:0},
+  27:{birthYear:2004,start:2025,end:null,cups:0},
   101:{birthYear:1921,start:1942,end:1960,cups:8},
   102:{birthYear:1931,start:1950,end:1971,cups:10},
   103:{birthYear:1951,start:1971,end:1985,cups:5},
