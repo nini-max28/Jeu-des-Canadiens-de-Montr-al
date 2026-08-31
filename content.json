@@ -101,54 +101,91 @@
       "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8479339.webp&w=1920&q=75"
     },
     {
+      "id": 21,
+      "name": "Kaiden Guhle",
+      "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8482087.webp&w=1920&q=75"
+    },
+    {
+      "id": 22,
+      "name": "Noah Dobson",
+      "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8480865.webp&w=1920&q=75"
+    },
+    {
+      "id": 23,
+      "name": "Jacob Fowler",
+      "photo": "https://www.hockeydb.com/ihdb/photos/jacob-fowler-2026-45.jpg"
+    },
+    {
+      "id": 24,
+      "name": "Alexandre Texier",
+      "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8480074.webp&w=1920&q=75"
+    },
+    {
+      "id": 25,
+      "name": "Jake Evans",
+      "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8478133.webp&w=1920&q=75"
+    },
+    {
+      "id": 26,
+      "name": "Phillip Danault",
+      "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8476479.webp&w=1920&q=75"
+    },
+    {
+      "id": 27,
+      "name": "Florian Xhekaj",
+      "photo": "https://www.hockeydb.com/ihdb/photos/florian-xhekaj-2026-45.jpg"
+    }
+
+
+    {
       "id": 101,
       "name": "Maurice Richard",
-      "photo": "https://www.facebook.com/didierartiste/posts/maurice-richard-le-rocket-est-n%C3%A9-le-4-ao%C3%BBt-1921-l%C3%A9gende-du-ch-il-a-marqu%C3%A9-lhisto/1068606255470365/"
+      "photo": "https://www.hockeydb.com/ihdb/photos/maurice-richard-1951-45.jpg"
     },
     {
       "id": 102,
       "name": "Jean Béliveau",
-      "photo": "https://www.gettyimages.ca/detail/news-photo/jean-beliveau-of-the-montreal-canadiens-poses-for-a-photo-news-photo/73653977"
+      "photo": "https://www.hockeydb.com/ihdb/photos/jean-beliveau-1963-45.jpg"
     },
     {
       "id": 103,
       "name": "Guy Lafleur",
-      "photo": "https://www.gettyimages.ca/detail/news-photo/canadian-professional-hockey-player-guy-lafleur-of-the-news-photo/57083343"
+      "photo": "https://www.hockeydb.com/ihdb/photos/guy-lafleur-1977-45.jpg"
     },
     {
       "id": 104,
       "name": "Ken Dryden",
-      "photo": "https://www.gettyimages.ca/detail/news-photo/goalie-ken-dryden-of-the-montreal-canadiens-poses-for-a-news-photo/816039536"
+      "photo": "https://www.hockeydb.com/ihdb/photos/ken-dryden-1970-490.jpg"
     },
     {
       "id": 105,
       "name": "Larry Robinson",
-      "photo": "https://www.gettyimages.ca/detail/news-photo/larry-robinson-of-the-montreal-canadiens-skates-in-pre-game-news-photo/87129431"
+      "photo": "https://www.hockeydb.com/ihdb/photos/larry-robinson-1977-45.jpg"
     },
     {
       "id": 106,
       "name": "Bob Gainey",
-      "photo": "https://www.gettyimages.ca/detail/news-photo/bob-gainey-of-the-montreal-canadiens-looks-on-against-the-news-photo/1253169726"
+      "photo": "https://www.hockeydb.com/ihdb/photos/bob-gainey-1977-45.jpg"
     },
     {
       "id": 107,
       "name": "Patrick Roy",
-      "photo": "https://www.gettyimages.ca/detail/news-photo/goaltender-patrick-roy-of-the-montreal-canadiens-poses-for-news-photo/73386465"
+      "photo": "https://www.hockeydb.com/ihdb/photos/patrick-roy-1997-690.jpg"
     },
     {
       "id": 108,
       "name": "Saku Koivu",
-      "photo": "https://www.gettyimages.ca/detail/news-photo/saku-koivu-of-the-montreal-canadiens-poses-for-his-2007-nhl-news-photo/77508485"
+      "photo": "https://www.hockeydb.com/ihdb/photos/saku-koivu-2014-4312.jpg"
     },
     {
       "id": 109,
       "name": "Carey Price",
-      "photo": "https://www.gettyimages.ca/detail/news-photo/carey-price-of-the-montreal-canadiens-poses-for-his-news-photo/1344873391"
+      "photo": "https://www.hockeydb.com/ihdb/photos/carey-price-2021-45.jpg"
     },
     {
       "id": 110,
       "name": "P.K. Subban",
-      "photo": "https://www.gettyimages.ca/detail/news-photo/subban-of-the-montreal-canadiens-argues-a-call-against-the-news-photo/98864247"
+      "photo": "https://www.hockeydb.com/ihdb/photos/carey-price-2021-45.jpg"
     }
   ],
   "questions": []
