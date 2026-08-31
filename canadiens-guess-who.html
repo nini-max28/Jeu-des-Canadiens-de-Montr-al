@@ -584,11 +584,10 @@
     <section class="panel">
       <h2>Propose un nom</h2>
       <div style="display:flex;gap:8px;">
-        <input id="soloInput" list="playerList" placeholder="Nom du joueur…" autocomplete="off"
+        <input id="soloInput" placeholder="Nom du joueur…" autocomplete="off"
           style="flex:1;background:var(--acier);color:var(--texte);border:1px solid #333C54;border-radius:8px;padding:10px 12px;font-size:14px;">
         <button class="btn btn-primary" id="soloGuessBtn">Deviner</button>
       </div>
-      <datalist id="playerList"></datalist>
       <p id="soloGuessError" style="display:none;color:#F5C6CB;font-size:12.5px;margin:8px 0 0;"></p>
 
       <div class="hintrow">
@@ -973,9 +972,9 @@ function switchTab(mode){
 
 /* ---------- Solo mode: silhouette + guesses ---------- */
 const DIFFICULTY = {
-  facile:    {tries:8, hints:3, blurStart:8,  blurStep:1.5, revealBadgesFromStart:true},
-  normal:    {tries:6, hints:2, blurStart:14, blurStep:3,   revealBadgesFromStart:true},
-  difficile: {tries:4, hints:1, blurStart:22, blurStep:4,   revealBadgesFromStart:false}
+  facile:    {tries:6, hints:3, blurStart:8,  blurStep:1.5, revealBadgesFromStart:true},
+  normal:    {tries:5, hints:2, blurStart:14, blurStep:3,   revealBadgesFromStart:true},
+  difficile: {tries:3, hints:1, blurStart:22, blurStep:4,   revealBadgesFromStart:false}
 };
 let soloDifficulty = 'normal';
 let soloSecret = null;
@@ -996,7 +995,6 @@ const soloHintBtn = document.getElementById('soloHintBtn');
 const soloHintCounter = document.getElementById('soloHintCounter');
 const soloHintBox = document.getElementById('soloHintBox');
 const soloGuessError = document.getElementById('soloGuessError');
-const playerListEl = document.getElementById('playerList');
 
 const POS_GROUP_CLASS = {C:'', AD:'', AG:'', D:'pos-defense', G:'pos-goalie'};
 
@@ -1015,10 +1013,6 @@ function scrambleName(name){
 function arrowCompare(foundVal, secretVal){
   if(foundVal === secretVal) return {sym:'\u2713', hit:true};
   return {sym: secretVal > foundVal ? '\u2191' : '\u2193', hit:false};
-}
-
-function populatePlayerList(){
-  playerListEl.innerHTML = PLAYERS.map(p=>`<option value="${p.name}">`).join('');
 }
 
 function newSoloGame(){
@@ -1054,7 +1048,6 @@ function newSoloGame(){
   soloGuessError.style.display = 'none';
   updateSoloHintButton();
   soloHintBox.style.display = 'none';
-  populatePlayerList();
 }
 
 function revealSoloBadges(){
