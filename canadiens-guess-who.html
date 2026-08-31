@@ -863,7 +863,7 @@ PLAYERS.forEach(p=>{
 // Contenu à distance (optionnel) : pointe CONTENT_URL vers un fichier JSON hébergé
 // (GitHub raw, Firebase, etc.) pour ajouter des joueurs/questions sans republier l'app.
 // Format attendu : { "players": [ {...mêmes champs que ci-dessus...} ], "questions": [ {"text": "...", "field": "quebec"} ] }
-const CONTENT_URL = "https://raw.githubusercontent.com/nini-max28/Jeu-des-Canadiens-de-Montr-al/main/content.json";
+const CONTENT_URL = "https://raw.githubusercontent.com/nini-max28/jeu-Pominville/main/content.json";
 
 async function loadRemoteContent(){
   if(!CONTENT_URL) return;
@@ -873,7 +873,12 @@ async function loadRemoteContent(){
     const data = await res.json();
     if(Array.isArray(data.players)){
       data.players.forEach(p=>{
-        if(!PLAYERS.some(existing=>existing.id===p.id)) PLAYERS.push(p);
+        const existing = PLAYERS.find(e=>e.id===p.id);
+        if(existing){
+          Object.assign(existing, p); // overlay fields (e.g., just add a photo to a built-in player)
+        } else {
+          PLAYERS.push(p); // brand-new player not already in the roster
+        }
       });
     }
     if(Array.isArray(data.questions)){
