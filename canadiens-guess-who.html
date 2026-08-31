@@ -1048,9 +1048,14 @@ function initials(name){
 // Uses p.photo (a URL) if the player data provides one; otherwise falls back
 // to an original cartoon mascot (not a likeness of anyone real). See
 // content.json for how to add a photo per player.
+function handleAvatarError(imgEl, playerId){
+  const p = PLAYERS.find(pl=>pl.id===playerId) || (typeof SOLO_PLAYERS!=='undefined' && SOLO_PLAYERS.find(pl=>pl.id===playerId));
+  if(p && imgEl && imgEl.parentElement) imgEl.parentElement.innerHTML = mascotSVG(p);
+}
+
 function avatarInner(p){
   if(p.photo){
-    return `<img src="${p.photo}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;" onerror="this.parentElement.innerHTML='${mascotSVG(p).replace(/'/g,"\\'")}';">`;
+    return `<img src="${p.photo}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;" onerror="handleAvatarError(this, ${p.id})">`;
   }
   return mascotSVG(p);
 }
