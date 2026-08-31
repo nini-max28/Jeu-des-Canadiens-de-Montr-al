@@ -480,15 +480,57 @@
   .dot.hit{background:#3FBF74;}
   .numhint{font-size:11px;color:var(--texte-att);min-width:34px;text-align:right;}
 
-  .scrambleline{
-    text-align:center;
-    margin:16px 0 0;
-    font-size:22px;
-    font-weight:800;
-    letter-spacing:.14em;
-    color:var(--or);
-    font-family:"Arial Narrow",Arial,sans-serif;
+  .scramblewrap{margin:16px 0 0;}
+  .letterboxes{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:5px;
   }
+  .wordgroup{
+    display:flex;
+    gap:5px;
+    margin:0 8px 6px 0;
+  }
+  .letterbox{
+    width:32px;height:38px;
+    border:2px solid var(--or);
+    border-radius:6px;
+    background:rgba(201,162,75,0.08);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:900;
+    font-size:17px;
+    color:var(--or);
+    text-transform:uppercase;
+  }
+  .letterbox.filled{
+    background:rgba(201,162,75,0.22);
+    cursor:pointer;
+  }
+  .letterpool{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:6px;
+    margin-top:14px;
+  }
+  .lettertile{
+    width:32px;height:38px;
+    border-radius:6px;
+    background:var(--acier-clair);
+    color:var(--glace);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:800;
+    font-size:15px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .lettertile:active{transform:scale(0.94);}
+  .lettertile.used{visibility:hidden;}
 
   .grow-top{
     display:flex;
@@ -578,7 +620,10 @@
         <div class="silhouettenum" id="soloNum">00</div>
         <div class="silhouettepos" id="soloPos">Attaquant</div>
       </div>
-      <p class="scrambleline" id="soloScramble"></p>
+      <div class="scramblewrap" id="soloScrambleWrap">
+        <div class="letterboxes" id="soloBoxes"></div>
+        <div class="letterpool" id="soloPool"></div>
+      </div>
       <p class="sub" style="text-align:center;margin:8px 0 0;">Devine le joueur à partir de son numéro flouté et de son nom mélangé. Chaque essai révèle plus d'indices.</p>
     </div>
 
@@ -1073,7 +1118,9 @@ const soloCardEl = document.getElementById('soloCard');
 const soloEraEl = document.getElementById('soloEra');
 const soloContinentEl = document.getElementById('soloContinent');
 const soloPosEl = document.getElementById('soloPos');
-const soloScrambleEl = document.getElementById('soloScramble');
+const soloScrambleWrap = document.getElementById('soloScrambleWrap');
+const soloBoxesEl = document.getElementById('soloBoxes');
+const soloPoolEl = document.getElementById('soloPool');
 const soloTriesEl = document.getElementById('soloTries');
 const soloInput = document.getElementById('soloInput');
 const soloGuessesEl = document.getElementById('soloGuesses');
@@ -1092,8 +1139,81 @@ document.querySelectorAll('.difficulty').forEach(btn=>{
   });
 });
 
-function scrambleName(name){
-  return name.split(' ').map(word=>shuffle(word.split(''))).map(letters=>letters.join('')).join('   ');
+let soloNameLetters = [];
+let soloBoxFill = [];
+let soloPoolOrder = [];
+let soloPoolUsed = [];
+
+function buildSoloLetterPuzzle(){
+  const words = soloSecret.name.split(' ');
+  soloNameLetters = [];
+  words.forEach((w, wi)=>{ w.split('').forEach(ch=> soloNameLetters.push({ch, wordIndex:wi})); });
+  soloBoxFill = new Array(soloNameLetters.length).fill(null);
+  soloPoolUsed = new Array(soloNameLetters.length).fill(false);
+  soloPoolOrder = shuffle(soloNameLetters.map((_,i)=>i));
+  drawSoloBoxes();
+  drawSoloPool();
+}
+
+function drawSoloBoxes(){
+  const words = soloSecret.name.split(' ');
+  let idx = 0;
+  let html = '';
+  words.forEach(w=>{
+    html += '<div class="wordgroup">';
+    for(let i=0;i<w.length;i++){
+      const tileIdx = soloBoxFill[idx];
+      const ch = tileIdx!==null ? soloNameLetters[tileIdx].ch : '';
+      html += `<div class="letterbox ${tileIdx!==null?'filled':''}" data-slot="${idx}">${ch}</div>`;
+      idx++;
+    }
+    html += '</div>';
+  });
+  soloBoxesEl.innerHTML = html;
+  soloBoxesEl.querySelectorAll('.letterbox.filled').forEach(el=>{
+    el.addEventListener('click', ()=> clearSoloSlot(Number(el.dataset.slot)));
+  });
+}
+
+function drawSoloPool(){
+  soloPoolEl.innerHTML = soloPoolOrder.map(ti=>{
+    const used = soloPoolUsed[ti];
+    return `<div class="lettertile ${used?'used':''}" data-tile="${ti}">${soloNameLetters[ti].ch.toUpperCase()}</div>`;
+  }).join('');
+  soloPoolEl.querySelectorAll('.lettertile:not(.used)').forEach(el=>{
+    el.addEventListener('click', ()=> placeSoloTile(Number(el.dataset.tile)));
+  });
+}
+
+function placeSoloTile(tileIdx){
+  const slot = soloBoxFill.findIndex(v=>v===null);
+  if(slot === -1) return;
+  soloBoxFill[slot] = tileIdx;
+  soloPoolUsed[tileIdx] = true;
+  drawSoloBoxes();
+  drawSoloPool();
+  maybeSyncSoloInput();
+}
+
+function clearSoloSlot(slot){
+  const tileIdx = soloBoxFill[slot];
+  if(tileIdx===null) return;
+  soloBoxFill[slot] = null;
+  soloPoolUsed[tileIdx] = false;
+  drawSoloBoxes();
+  drawSoloPool();
+}
+
+function maybeSyncSoloInput(){
+  if(!soloBoxFill.every(v=>v!==null)) return;
+  const words = soloSecret.name.split(' ');
+  let idx = 0;
+  const assembled = words.map(w=>{
+    let out = '';
+    for(let i=0;i<w.length;i++){ out += soloNameLetters[soloBoxFill[idx]].ch; idx++; }
+    return out;
+  }).join(' ');
+  soloInput.value = assembled;
 }
 
 function arrowCompare(foundVal, secretVal){
@@ -1112,17 +1232,18 @@ function newSoloGame(){
   soloNumEl.textContent = soloSecret.num;
   soloNumEl.style.filter = `blur(${cfg.blurStart}px)`;
   soloCardEl.className = 'silhouettecard ' + (POS_GROUP_CLASS[soloSecret.pos] || '');
+  buildSoloLetterPuzzle();
 
   if(cfg.revealBadgesFromStart){
     soloEraEl.style.visibility = 'visible';
     soloContinentEl.style.visibility = 'visible';
     soloPosEl.style.visibility = 'visible';
-    soloScrambleEl.textContent = scrambleName(soloSecret.name).toUpperCase();
+    soloScrambleWrap.style.display = '';
   } else {
     soloEraEl.style.visibility = 'hidden';
     soloContinentEl.style.visibility = 'hidden';
     soloPosEl.style.visibility = 'hidden';
-    soloScrambleEl.textContent = '? ? ? ? ?';
+    soloScrambleWrap.style.display = 'none';
   }
   soloEraEl.textContent = soloSecret.active ? 'Actif' : 'Légende';
   soloEraEl.className = 'era ' + (soloSecret.active ? 'actif' : 'legende');
@@ -1140,7 +1261,7 @@ function revealSoloBadges(){
   soloEraEl.style.visibility = 'visible';
   soloContinentEl.style.visibility = 'visible';
   soloPosEl.style.visibility = 'visible';
-  soloScrambleEl.textContent = scrambleName(soloSecret.name).toUpperCase();
+  soloScrambleWrap.style.display = '';
 }
 
 function updateSoloBlur(){
