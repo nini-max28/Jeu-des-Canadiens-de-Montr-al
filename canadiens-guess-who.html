@@ -1098,7 +1098,13 @@ function askQuestion(idx){
   item.textContent = `${answer?'Oui':'Non'} — ${q.text}`;
   logEl.prepend(item);
   qCount.textContent = askedIdx.size;
+
+  PLAYERS.forEach(p=>{
+    if(q.test(p) !== answer) eliminated.add(p.id);
+  });
+
   renderQuestions();
+  renderRoster();
 }
 
 document.getElementById('logToggle').addEventListener('click', ()=>{
