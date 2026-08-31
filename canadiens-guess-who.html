@@ -462,23 +462,48 @@
     color:rgba(255,255,255,0.85);
     letter-spacing:.02em;
   }
-  .guessrow{
+  .guesscard{
     background:var(--acier-clair);
-    border-radius:10px;
-    padding:10px 12px;
+    border:1px solid #333C54;
+    border-radius:14px;
+    padding:14px;
+  }
+  .guesscard-head{
     display:flex;
-    flex-direction:column;
-    gap:6px;
-    font-size:13px;
+    align-items:center;
+    gap:10px;
+    margin-bottom:12px;
   }
-  .guessrow .gname{font-weight:700;color:var(--glace);flex:1;}
-  .dots{display:flex;gap:5px;}
-  .dot{
-    width:9px;height:9px;border-radius:50%;
-    background:#3A4258;
+  .guesscard-head .avatar{width:34px;height:34px;font-size:13px;border-radius:8px;flex-shrink:0;}
+  .guesscard-name{font-weight:800;font-size:15px;color:var(--glace);flex:1;}
+  .wintag{font-size:11px;font-weight:800;color:#8FE0AE;background:rgba(63,191,116,0.15);padding:4px 9px;border-radius:999px;}
+
+  .statrow{display:flex;gap:8px;margin-bottom:8px;}
+  .statrow:last-child{margin-bottom:0;}
+  .stattile{
+    flex:1;
+    background:var(--acier);
+    border-radius:10px;
+    padding:10px 8px;
+    text-align:center;
   }
-  .dot.hit{background:#3FBF74;}
-  .numhint{font-size:11px;color:var(--texte-att);min-width:34px;text-align:right;}
+  .stattile b{
+    display:block;
+    font-size:9.5px;
+    font-weight:700;
+    letter-spacing:.05em;
+    color:var(--texte-att);
+    margin-bottom:4px;
+  }
+  .stattile span{
+    font-size:17px;
+    font-weight:900;
+    color:var(--glace);
+    font-family:"Arial Narrow",Arial,sans-serif;
+  }
+  .stattile.hit{background:#1E5B3A;}
+  .stattile.hit b{color:#8FE0AE;}
+  .stattile.hit span{color:#B7F0CC;}
 
   .scramblewrap{margin:16px 0 0;}
   .letterboxes{
@@ -531,35 +556,8 @@
   }
   .lettertile:active{transform:scale(0.94);}
   .lettertile.used{visibility:hidden;}
-
-  .grow-top{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-  }
-  .wintag{font-size:11px;font-weight:800;color:#8FE0AE;}
-  .sqrow{
-    display:flex;
-    gap:5px;
-    margin-top:8px;
-  }
-  .sq{
-    flex:1;
-    background:#3A4258;
-    border-radius:6px;
-    padding:5px 2px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    gap:2px;
-  }
-  .sq b{font-size:8.5px;font-weight:700;color:#B7C0DB;letter-spacing:.02em;}
-  .sq span{font-size:13px;font-weight:800;color:var(--glace);}
-  .sq.hit{background:#1E5B3A;}
-  .sq.hit b{color:#8FE0AE;}
-  .sq.hit span{color:#B7F0CC;}
 </style>
+
 </head>
 <body>
 
@@ -1297,23 +1295,26 @@ function soloGuess(){
 
   const win = found.id === soloSecret.id;
   const row = document.createElement('div');
-  row.className = 'guessrow';
+  row.className = 'guesscard';
   const posHit = found.pos === soloSecret.pos;
   const countryHit = found.country === soloSecret.country;
   const born = arrowCompare(found.birthYear, soloSecret.birthYear);
   const tenure = arrowCompare(found.tenureStart, soloSecret.tenureStart);
   const cupsCmp = arrowCompare(found.cups, soloSecret.cups);
   row.innerHTML = `
-    <div class="grow-top">
-      <span class="gname">${found.name}</span>
+    <div class="guesscard-head">
+      <div class="avatar">${initials(found.name)}</div>
+      <span class="guesscard-name">${found.name}</span>
       ${win ? '<span class="wintag">✓ Trouvé</span>' : ''}
     </div>
-    <div class="sqrow">
-      <div class="sq ${posHit?'hit':''}"><b>POS</b><span>${posHit?'✓':'✗'}</span></div>
-      <div class="sq ${countryHit?'hit':''}"><b>PAYS</b><span>${countryHit?'✓':'✗'}</span></div>
-      <div class="sq ${born.hit?'hit':''}"><b>NÉ</b><span>${born.sym}</span></div>
-      <div class="sq ${tenure.hit?'hit':''}"><b>CH</b><span>${tenure.sym}</span></div>
-      <div class="sq ${cupsCmp.hit?'hit':''}"><b>COUPES</b><span>${cupsCmp.sym}</span></div>
+    <div class="statrow">
+      <div class="stattile ${posHit?'hit':''}"><b>POSITION</b><span>${posHit?'✓':'✗'}</span></div>
+      <div class="stattile ${countryHit?'hit':''}"><b>PAYS</b><span>${countryHit?'✓':'✗'}</span></div>
+      <div class="stattile ${born.hit?'hit':''}"><b>NÉ EN</b><span>${born.sym}</span></div>
+    </div>
+    <div class="statrow">
+      <div class="stattile ${tenure.hit?'hit':''}"><b>ARRIVÉE CH</b><span>${tenure.sym}</span></div>
+      <div class="stattile ${cupsCmp.hit?'hit':''}"><b>COUPES</b><span>${cupsCmp.sym}</span></div>
     </div>`;
   soloGuessesEl.prepend(row);
 
