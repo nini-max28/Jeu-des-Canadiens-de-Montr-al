@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Qui est-ce — Soccer</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<style>
+  :root{
+    --rouge: #1E8449;
+    --rouge-fonce: #145A32;
+    --bleu: #142A1C;
+    --bleu-clair: #234433;
+    --glace: #EDF1F5;
+    --acier: #0F1B14;
+    --acier-clair: #1C2E23;
+    --or: #D9A441;
+    --texte: #EDF1F5;
+    --texte-att: #9CB3A6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(30,132,73,0.20), transparent 60%),
+      var(--acier);
+    color:var(--texte);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:0 0 120px;}
+
+  header{padding:28px 20px 22px;text-align:center;position:relative;}
+  .eyebrow{font-size:13px;color:var(--texte-att);letter-spacing:.02em;margin:0 0 6px;}
+  h1{
+    font-family:"Arial Narrow",Arial,sans-serif;
+    font-weight:900;font-stretch:condensed;font-size:44px;line-height:0.95;
+    margin:0;letter-spacing:0.5px;color:var(--glace);text-transform:uppercase;
+    text-shadow:0 2px 0 rgba(0,0,0,0.25);
+  }
+  h1 span{color:var(--rouge);}
+  .centerline{
+    height:3px;margin:20px auto 0;max-width:560px;
+    background:linear-gradient(90deg, transparent, var(--rouge) 15%, var(--rouge) 85%, transparent);
+    position:relative;
+  }
+  .centerline::after{
+    content:"";position:absolute;left:50%;top:50%;width:26px;height:26px;
+    transform:translate(-50%,-50%);border:3px solid var(--rouge);border-radius:50%;background:var(--acier);
+  }
+
+  .statusbar{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 0;gap:12px;}
+  .pill{background:var(--acier-clair);border-radius:999px;padding:8px 14px;font-size:14px;color:var(--texte-att);display:flex;align-items:center;gap:8px;}
+  .pill b{color:var(--glace);font-size:16px;}
+  .btn{border:none;cursor:pointer;font-weight:700;border-radius:10px;padding:10px 16px;font-size:14px;transition:transform .12s ease, opacity .12s ease;}
+  .btn:active{transform:scale(0.96);}
+  .btn-primary{background:var(--rouge);color:#fff;}
+  .btn-ghost{background:transparent;color:var(--texte-att);border:1px solid #2E4A3A;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  section.panel{margin:22px 16px 0;background:var(--bleu);border-radius:16px;padding:18px 16px 16px;position:relative;overflow:hidden;}
+  section.panel::before{content:"";position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle, rgba(255,255,255,0.06), transparent 70%);}
+  .panel h2{margin:0 0 4px;font-size:15px;font-weight:700;color:var(--glace);}
+  .panel p.sub{margin:0 0 14px;font-size:13px;color:#AFC4B7;}
+  .qgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .qbtn{text-align:left;background:var(--bleu-clair);color:var(--texte);border:none;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.25;cursor:pointer;}
+  .qbtn:disabled{opacity:.35;cursor:default;}
+  .qbtn:not(:disabled):active{transform:scale(0.98);}
+
+  .answerbox{margin-top:14px;background:var(--acier);border-radius:10px;padding:12px 14px;font-size:14px;display:flex;align-items:center;gap:10px;min-height:20px;}
+  .answerbox .badge{font-weight:800;font-size:13px;padding:3px 10px;border-radius:999px;}
+  .badge.oui{background:#1E5B3A;color:#B7F0CC;}
+  .badge.non{background:#7E1522;color:#F5C6CB;}
+
+  .log{margin-top:10px;max-height:0;overflow:hidden;transition:max-height .25s ease;}
+  .log.open{max-height:300px;overflow-y:auto;}
+  .log-item{font-size:12.5px;color:#8FA894;padding:6px 2px;border-top:1px solid #26392C;}
+  .log-toggle{background:none;border:none;color:#7FC49A;font-size:12.5px;cursor:pointer;margin-top:8px;padding:0;}
+
+  .hintrow{display:flex;justify-content:space-between;align-items:center;margin-top:14px;}
+
+  .rostertitle{margin:26px 16px 10px;display:flex;justify-content:space-between;align-items:baseline;}
+  .rostertitle h2{font-size:15px;margin:0;color:var(--glace);}
+  .rostertitle span{font-size:12.5px;color:var(--texte-att);}
+
+  .grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;padding:0 16px;}
+  @media (min-width:420px){ .grid{grid-template-columns:repeat(3,1fr);} }
+  .card{perspective:800px;height:150px;}
+  .cardface{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .4s cubic-bezier(.2,.8,.3,1);}
+  .card.eliminated .cardface{transform:rotateY(180deg);}
+  .front,.back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;cursor:pointer;user-select:none;overflow:hidden;}
+  .front{background:var(--acier-clair);border:1px solid #2E4A3A;}
+  .card.selected .front{border:2px solid var(--or);}
+  .back{background:repeating-linear-gradient(45deg, #101A13, #101A13 8px, #16221A 8px, #16221A 16px);transform:rotateY(180deg);display:flex;align-items:center;justify-content:center;}
+  .back span{font-size:11px;color:#496552;letter-spacing:.03em;}
+  .cardbg{position:absolute;inset:0;background:linear-gradient(160deg, var(--rouge), var(--rouge-fonce));display:flex;align-items:center;justify-content:center;}
+  .cardbg svg, .cardbg img{width:100%;height:100%;}
+  .cardscrim{position:absolute;left:0;right:0;bottom:0;top:38%;background:linear-gradient(180deg, transparent, rgba(10,13,10,0.9) 68%);}
+  .cardtext{position:absolute;left:10px;right:10px;bottom:9px;}
+  .avatar{width:64px;height:64px;border-radius:10px;background:linear-gradient(160deg, var(--rouge), var(--rouge-fonce));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;overflow:hidden;}
+  .cnum{position:absolute;top:8px;right:10px;font-size:16px;font-weight:900;color:#fff;background:rgba(10,13,10,0.55);padding:2px 8px;border-radius:6px;}
+  .cname{font-size:13px;font-weight:700;color:var(--glace);line-height:1.15;}
+  .cpos{font-size:11px;color:var(--texte-att);}
+  .era{position:absolute;top:8px;left:10px;font-size:9.5px;font-weight:700;letter-spacing:.02em;padding:2px 6px;border-radius:5px;}
+  .era.actif{background:rgba(30,91,58,0.35);color:#8FE0AE;}
+  .era.legende{background:rgba(217,164,65,0.25);color:var(--or);}
+
+  .guessbar{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg, transparent, var(--acier) 30%);padding:26px 16px 16px;}
+  .guessbar-inner{max-width:608px;margin:0 auto;background:var(--bleu);border-radius:14px;padding:12px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,0.35);}
+  .guessbar select{flex:1;background:var(--acier);color:var(--texte);border:1px solid #2E4A3A;border-radius:8px;padding:10px;font-size:14px;}
+
+  .overlay{position:fixed;inset:0;background:rgba(6,10,7,0.9);display:none;align-items:center;justify-content:center;padding:24px;z-index:20;}
+  .overlay.show{display:flex;}
+  .overlaycard{background:var(--bleu);border-radius:18px;padding:26px 22px 22px;text-align:center;max-width:360px;width:100%;}
+  .overlaycard .avatar{width:88px;height:88px;font-size:24px;margin:0 auto 14px;border-radius:14px;}
+  .overlaycard h3{margin:0 0 4px;font-size:20px;color:var(--glace);}
+  .overlaycard p{margin:0 0 18px;color:#AFC4B7;font-size:13.5px;}
+  .result-tag{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.03em;padding:4px 12px;border-radius:999px;margin-bottom:10px;}
+  .result-tag.win{background:#1E5B3A;color:#B7F0CC;}
+  .result-tag.lose{background:#7E1522;color:#F5C6CB;}
+
+  .tabs{display:flex;gap:8px;padding:0 16px;margin-top:6px;}
+  .tabbtn{flex:1;background:var(--acier-clair);color:var(--texte-att);border:none;border-radius:10px;padding:11px 6px;font-size:12px;font-weight:700;cursor:pointer;}
+  .tabbtn.active{background:var(--rouge);color:#fff;}
+
+  .coinbar{padding:10px 16px 0;display:flex;justify-content:center;}
+  .coinpill{background:linear-gradient(90deg, rgba(217,164,65,0.18), rgba(217,164,65,0.05));border:1px solid rgba(217,164,65,0.35);}
+  .coinpill b{color:var(--or);}
+
+  .silhouettewrap{padding:20px 16px 0;}
+  .imgtoggle{display:flex;align-items:center;gap:8px;padding:14px 16px 0;font-size:13px;color:var(--texte-att);}
+  .imgtoggle input{accent-color:var(--rouge);width:16px;height:16px;}
+
+  .silhouettecard{max-width:220px;margin:0 auto;aspect-ratio:1;border-radius:20px;background:linear-gradient(160deg, var(--rouge), var(--rouge-fonce));display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+  .silhouettecard.pos-defense{background:linear-gradient(160deg, #1B4F9C, #123568);}
+  .silhouettecard.pos-milieu{background:linear-gradient(160deg, #1E8449, #155C34);}
+  .silhouettecard.pos-gardien{background:linear-gradient(160deg, #E8B923, #A8820F);}
+  .silhouettecard .era{top:12px;left:12px;font-size:10.5px;}
+  .continent-badge{position:absolute;top:12px;right:12px;font-size:10.5px;font-weight:700;letter-spacing:.02em;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,0.16);color:#fff;}
+  .silhouettecard::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 14px);}
+  .silhouettenum{font-size:64px;font-weight:900;color:rgba(255,255,255,0.92);font-family:"Arial Narrow",Arial,sans-serif;filter:blur(24px);transition:filter .5s ease;text-align:center;padding:0 10px;}
+  .silhouettepos{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:12px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:.02em;}
+
+  .scramblewrap{margin:16px 0 0;}
+  .letterboxes{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;}
+  .wordgroup{display:flex;gap:5px;margin:0 8px 6px 0;}
+  .letterbox{width:30px;height:36px;border:2px solid var(--or);border-radius:6px;background:rgba(217,164,65,0.08);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;color:var(--or);text-transform:uppercase;}
+  .letterbox.filled{background:rgba(217,164,65,0.22);cursor:pointer;}
+  .letterpool{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:14px;}
+  .lettertile{width:30px;height:36px;border-radius:6px;background:var(--acier-clair);color:var(--glace);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;cursor:pointer;user-select:none;}
+  .lettertile:active{transform:scale(0.94);}
+  .lettertile.used{visibility:hidden;}
+
+  .pickgrid{display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-top:12px;}
+  .picktile{background:var(--acier);border-radius:10px;padding:6px 4px 8px;text-align:center;cursor:pointer;}
+  .picktile:active{transform:scale(0.95);}
+  .picktile .avatar{width:64px;height:64px;margin:0 auto 6px;border-radius:10px;}
+  .picktile .pickname{font-size:10px;color:var(--texte-att);line-height:1.2;}
+  .picktile.tried{opacity:.35;pointer-events:none;}
+
+  .guesscard{background:var(--acier-clair);border:1px solid #2E4A3A;border-radius:14px;padding:14px;}
+  .guesscard-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .guesscard-head .avatar{width:52px;height:52px;font-size:13px;border-radius:10px;flex-shrink:0;}
+  .guesscard-name{font-weight:800;font-size:15px;color:var(--glace);flex:1;}
+  .wintag{font-size:11px;font-weight:800;color:#8FE0AE;background:rgba(63,191,116,0.15);padding:4px 9px;border-radius:999px;}
+  .statrow{display:flex;gap:8px;margin-bottom:8px;}
+  .statrow:last-child{margin-bottom:0;}
+  .stattile{flex:1;background:var(--acier);border-radius:10px;padding:10px 8px;text-align:center;}
+  .stattile b{display:block;font-size:9.5px;font-weight:700;letter-spacing:.05em;color:var(--texte-att);margin-bottom:4px;}
+  .stattile span{font-size:13px;font-weight:800;color:var(--glace);line-height:1.25;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .stattile.hit{background:#1E5B3A;}
+  .stattile.hit b{color:#8FE0AE;}
+  .stattile.hit span{color:#B7F0CC;}
+  .stattile.miss{background:#7E1522;}
+  .stattile.miss b{color:#F5B4BB;}
+  .stattile.miss span{color:#FBDADD;}
+
+  .roomcode{font-family:"Arial Narrow",Arial,sans-serif;font-size:48px;font-weight:900;letter-spacing:.12em;color:var(--or);margin:12px 0 0;}
+
+  .levelcard{background:var(--bleu);border-radius:14px;padding:16px;cursor:pointer;}
+  .levelcard.locked{opacity:.5;cursor:default;}
+  .levelcard-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .levelname{font-weight:800;font-size:15px;color:var(--glace);}
+  .levellock{font-size:14px;}
+  .levelprogtext{font-size:12px;color:var(--texte-att);margin-bottom:8px;}
+  .levelbar{height:8px;background:var(--acier);border-radius:999px;overflow:hidden;}
+  .levelbarfill{height:100%;background:linear-gradient(90deg, var(--or), #F0C878);border-radius:999px;transition:width .3s ease;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Un joueur secret. Des questions qui changent à chaque partie. Vedettes actuelles et légendes du soccer.</p>
+    <h1>Qui est-ce<br><span>en soccer</span></h1>
+    <div class="centerline"></div>
+  </header>
+
+  <div class="tabs">
+    <button class="tabbtn active" id="tabDuel">Face à face</button>
+    <button class="tabbtn" id="tabSolo">Solo</button>
+    <button class="tabbtn" id="tabLevels">Niveaux</button>
+    <button class="tabbtn" id="tabMulti">En ligne</button>
+  </div>
+
+  <div class="coinbar">
+    <div class="pill coinpill">Pièces&nbsp;<b id="coinCount">20</b></div>
+  </div>
+
+  <div id="duelMode">
+  <div class="statusbar">
+    <div class="pill">Restants&nbsp;<b id="remCount">20</b></div>
+    <div class="pill">Questions posées&nbsp;<b id="qCount">0</b></div>
+    <button class="btn btn-ghost" id="newGameBtn">Nouvelle partie</button>
+  </div>
+
+  <section class="panel">
+    <h2>Pose une question</h2>
+    <p class="sub">La personne secrète est choisie. Clique une question pour obtenir une réponse par oui ou non — les cartes qui ne correspondent plus s'écartent automatiquement.</p>
+    <div class="qgrid" id="qgrid"></div>
+    <div class="answerbox" id="answerbox"><span style="color:#7FA88F;">Choisis une question pour commencer.</span></div>
+    <button class="log-toggle" id="logToggle">Voir l'historique des réponses ▾</button>
+    <div class="log" id="log"></div>
+    <div class="hintrow">
+      <span style="font-size:12.5px;color:#8FA894;" id="hintCounter">3 indices restants</span>
+      <button class="btn btn-primary" id="hintBtn" style="background:var(--or);color:#2a2107;">Obtenir un indice</button>
+    </div>
+  </section>
+
+  <div class="rostertitle">
+    <h2>La liste</h2>
+    <span>Tape une carte pour l'écarter</span>
+  </div>
+  <div class="grid" id="grid"></div>
+  </div>
+
+  <div id="soloMode" style="display:none;">
+    <label class="imgtoggle">
+      <input type="checkbox" id="soloImgToggle" checked>
+      <span>Afficher l'image et les lettres</span>
+    </label>
+    <div class="silhouettewrap" id="silhouettewrap">
+      <div class="silhouettecard" id="soloCard">
+        <span class="era" id="soloEra">Actif</span>
+        <span class="continent-badge" id="soloContinent">Europe</span>
+        <div class="silhouettenum" id="soloNum">00</div>
+        <div class="silhouettepos" id="soloPos">Attaquant</div>
+      </div>
+      <div class="scramblewrap" id="soloScrambleWrap">
+        <div class="letterboxes" id="soloBoxes"></div>
+        <div class="letterpool" id="soloPool"></div>
+      </div>
+      <p class="sub" style="text-align:center;margin:8px 0 0;">Devine la personne à partir de son numéro flouté et de son nom mélangé.</p>
+    </div>
+
+    <div class="statusbar">
+      <div class="pill">Essais restants&nbsp;<b id="soloTries">6</b></div>
+      <button class="btn btn-ghost" id="newSoloBtn">Nouvelle partie</button>
+    </div>
+
+    <div class="tabs" style="padding:0 16px 4px;">
+      <button class="tabbtn difficulty" id="diffFacile" data-diff="facile">Facile</button>
+      <button class="tabbtn difficulty active" id="diffNormal" data-diff="normal">Normal</button>
+      <button class="tabbtn difficulty" id="diffDifficile" data-diff="difficile">Difficile</button>
+    </div>
+
+    <section class="panel">
+      <h2>Propose un nom</h2>
+      <div style="display:flex;gap:8px;">
+        <input id="soloInput" placeholder="Nom du joueur…" autocomplete="off"
+          style="flex:1;background:var(--acier);color:var(--texte);border:1px solid #2E4A3A;border-radius:8px;padding:10px 12px;font-size:14px;">
+        <button class="btn btn-primary" id="soloGuessBtn">Deviner</button>
+      </div>
+      <p id="soloGuessError" style="display:none;color:#F5C6CB;font-size:12.5px;margin:8px 0 0;"></p>
+
+      <label class="imgtoggle" style="padding:12px 0 0;">
+        <input type="checkbox" id="soloPickToggle" checked>
+        <span>Deviner en cliquant une image (pour les petits qui n'écrivent pas encore)</span>
+      </label>
+      <div class="pickgrid" id="soloPickGrid"></div>
+
+      <div class="hintrow">
+        <span style="font-size:12.5px;color:#8FA894;" id="soloHintCounter">2 indices restants</span>
+        <button class="btn btn-primary" id="soloHintBtn" style="background:var(--or);color:#2a2107;">Obtenir un indice</button>
+      </div>
+      <div class="answerbox" id="soloHintBox" style="display:none;"></div>
+
+      <div id="soloGuesses" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;"></div>
+    </section>
+  </div>
+
+  <div id="levelsMode" style="display:none;">
+    <div id="levelsListView">
+      <div class="rostertitle" style="margin-top:22px;">
+        <h2>Choisis un niveau</h2>
+        <span>La difficulté augmente à chaque niveau</span>
+      </div>
+      <div id="levelsList" style="padding:0 16px;display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+
+    <div id="levelsPlayView" style="display:none;">
+      <div class="statusbar">
+        <div class="pill" id="lvlProgressPill">Niveau 1 — 0/10</div>
+        <button class="btn btn-ghost" id="lvlBackBtn">← Niveaux</button>
+      </div>
+
+      <div class="silhouettewrap">
+        <div class="silhouettecard" id="lvlCard">
+          <img id="lvlPhoto" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:filter .5s ease;">
+          <span class="era" id="lvlEra">Actif</span>
+          <span class="continent-badge" id="lvlContinent">Europe</span>
+          <div class="silhouettenum" id="lvlNum">00</div>
+          <div class="silhouettepos" id="lvlPos">Attaquant</div>
+        </div>
+        <div class="scramblewrap">
+          <div class="letterboxes" id="lvlBoxes"></div>
+          <div class="letterpool" id="lvlPool"></div>
+        </div>
+        <p class="sub" style="text-align:center;margin:8px 0 0;" id="lvlDecoyNote"></p>
+      </div>
+
+      <div class="statusbar" style="padding-top:14px;">
+        <div class="pill">Essais restants&nbsp;<b id="lvlTries">9</b></div>
+      </div>
+
+      <section class="panel">
+        <h2>Propose un nom</h2>
+        <div style="display:flex;gap:8px;">
+          <input id="lvlInput" placeholder="Nom du joueur…" autocomplete="off"
+            style="flex:1;background:var(--acier);color:var(--texte);border:1px solid #2E4A3A;border-radius:8px;padding:10px 12px;font-size:14px;">
+          <button class="btn btn-primary" id="lvlGuessBtn">Deviner</button>
+        </div>
+        <p id="lvlGuessError" style="display:none;color:#F5C6CB;font-size:12.5px;margin:8px 0 0;"></p>
+
+        <div class="hintrow">
+          <span style="font-size:12.5px;color:#8FA894;" id="lvlHintCounter">3 indices restants</span>
+          <button class="btn btn-primary" id="lvlHintBtn" style="background:var(--or);color:#2a2107;">Obtenir un indice</button>
+        </div>
+        <div class="answerbox" id="lvlHintBox" style="display:none;"></div>
+
+        <div id="lvlGuesses" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;"></div>
+      </section>
+    </div>
+
+    <div id="levelsCompleteView" style="display:none;">
+      <section class="panel" style="text-align:center;margin-top:22px;">
+        <h2>Niveau terminé! ⚽</h2>
+        <p class="sub" id="lvlCompleteText">Tu as trouvé tout le monde dans ce niveau.</p>
+        <button class="btn btn-primary" id="lvlContinueBtn" style="width:100%;margin-top:8px;">Continuer</button>
+      </section>
+    </div>
+  </div>
+
+  <div id="multiMode" style="display:none;">
+    <div id="multiNoConfig" class="panel" style="display:none;margin:22px 16px 0;">
+      <h2>Configuration requise</h2>
+      <p class="sub">Le mode en ligne a besoin d'un projet Firebase gratuit pour synchroniser les deux appareils.</p>
+    </div>
+
+    <div id="multiLobby">
+      <section class="panel">
+        <h2>Jouer en ligne</h2>
+        <p class="sub">Un appareil crée la partie, l'autre entre le code pour la rejoindre.</p>
+        <input id="multiName" placeholder="Ton prénom" autocomplete="off"
+          style="width:100%;background:var(--acier);color:var(--texte);border:1px solid #2E4A3A;border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:10px;">
+        <button class="btn btn-primary" id="multiCreateBtn" style="width:100%;margin-bottom:14px;">Créer une partie</button>
+        <div class="centerline" style="max-width:100%;margin:6px 0 14px;"></div>
+        <div style="display:flex;gap:8px;">
+          <input id="multiJoinCode" placeholder="Code à 4 lettres" autocomplete="off" maxlength="4"
+            style="flex:1;text-transform:uppercase;background:var(--acier);color:var(--texte);border:1px solid #2E4A3A;border-radius:8px;padding:10px 12px;font-size:14px;">
+          <button class="btn btn-primary" id="multiJoinBtn">Rejoindre</button>
+        </div>
+        <p id="multiLobbyError" style="display:none;color:#F5C6CB;font-size:12.5px;margin:10px 0 0;"></p>
+      </section>
+    </div>
+
+    <div id="multiWaiting" style="display:none;">
+      <section class="panel" style="text-align:center;">
+        <h2>En attente d'un adversaire…</h2>
+        <p class="sub">Partage ce code avec l'autre joueur :</p>
+        <div class="roomcode" id="multiRoomCode">----</div>
+        <button class="btn btn-ghost" id="multiCancelBtn" style="margin-top:16px;">Annuler</button>
+      </section>
+    </div>
+
+    <div id="multiPlay" style="display:none;">
+      <div class="statusbar">
+        <div class="pill" id="multiTurnPill">C'est ton tour</div>
+        <button class="btn btn-ghost" id="multiLeaveBtn">Quitter</button>
+      </div>
+      <section class="panel">
+        <h2>Ton identité secrète</h2>
+        <p class="sub" id="multiMySecret">—</p>
+        <p class="sub">L'adversaire doit deviner qui tu es. Toi, devine le sien.</p>
+      </section>
+      <section class="panel">
+        <h2>Pose une question sur l'adversaire</h2>
+        <div class="qgrid" id="multiQgrid"></div>
+        <div class="answerbox" id="multiAnswerbox"><span style="color:#7FA88F;">En attente…</span></div>
+        <button class="log-toggle" id="multiLogToggle">Voir l'historique ▾</button>
+        <div class="log" id="multiLog"></div>
+      </section>
+      <div class="rostertitle">
+        <h2>Devine l'adversaire</h2>
+        <span>Choisis dans la liste puis confirme</span>
+      </div>
+      <div style="padding:0 16px;display:flex;gap:8px;">
+        <select id="multiGuessSelect" style="flex:1;background:var(--acier-clair);color:var(--texte);border:1px solid #2E4A3A;border-radius:8px;padding:10px 12px;font-size:14px;">
+          <option value="">Faire une supposition…</option>
+        </select>
+        <button class="btn btn-primary" id="multiGuessBtn">Deviner</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="guessbar" id="duelGuessbar">
+  <div class="guessbar-inner">
+    <select id="guessSelect"><option value="">Faire une supposition…</option></select>
+    <button class="btn btn-primary" id="guessBtn">Deviner</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="overlaycard">
+    <div class="result-tag" id="resultTag">GAGNÉ</div>
+    <div class="avatar" id="revealAvatar" style="font-size:22px;"></div>
+    <h3 id="revealName"></h3>
+    <p id="revealSub"></p>
+    <button class="btn btn-primary" id="playAgainBtn">Rejouer</button>
+  </div>
+</div>
+
+<script>
+const CURRENT = [
+  {id:1,name:"Lionel Messi",num:10,pos:"A",posLabel:"Attaquant",country:"Argentine",continent:"Amérique du Sud",team:"Inter Miami",captain:"C",tall:false,shootsLeft:true,veteran:true},
+  {id:2,name:"Cristiano Ronaldo",num:7,pos:"A",posLabel:"Attaquant",country:"Portugal",continent:"Europe",team:"Al Nassr",captain:"C",tall:true,shootsLeft:false,veteran:true},
+  {id:3,name:"Kylian Mbappé",num:9,pos:"A",posLabel:"Attaquant",country:"France",continent:"Europe",team:"Real Madrid",captain:null,tall:false,shootsLeft:false,veteran:true},
+  {id:4,name:"Erling Haaland",num:9,pos:"A",posLabel:"Attaquant",country:"Norvège",continent:"Europe",team:"Manchester City",captain:null,tall:true,shootsLeft:false,veteran:true},
+  {id:5,name:"Kevin De Bruyne",num:11,pos:"M",posLabel:"Milieu",country:"Belgique",continent:"Europe",team:"Napoli",captain:null,tall:false,shootsLeft:false,veteran:true},
+  {id:6,name:"Vinícius Júnior",num:7,pos:"A",posLabel:"Attaquant",country:"Brésil",continent:"Amérique du Sud",team:"Real Madrid",captain:null,tall:false,shootsLeft:false,veteran:true},
+  {id:7,name:"Jude Bellingham",num:5,pos:"M",posLabel:"Milieu",country:"Angleterre",continent:"Europe",team:"Real Madrid",captain:null,tall:true,shootsLeft:false,veteran:false},
+  {id:8,name:"Mohamed Salah",num:11,pos:"A",posLabel:"Attaquant",country:"Égypte",continent:"Afrique",team:"Liverpool",captain:"C",tall:false,shootsLeft:true,veteran:true},
+  {id:9,name:"Harry Kane",num:9,pos:"A",posLabel:"Attaquant",country:"Angleterre",continent:"Europe",team:"Bayern Munich",captain:"C",tall:true,shootsLeft:false,veteran:true},
+  {id:10,name:"Virgil van Dijk",num:4,pos:"D",posLabel:"Défenseur",country:"Pays-Bas",continent:"Europe",team:"Liverpool",captain:"C",tall:true,shootsLeft:false,veteran:true},
+  {id:11,name:"Alphonso Davies",num:19,pos:"D",posLabel:"Défenseur",country:"Canada",continent:"Amérique du Nord",team:"Bayern Munich",captain:null,tall:false,shootsLeft:true,veteran:true},
+  {id:12,name:"Neymar Jr",num:10,pos:"A",posLabel:"Attaquant",country:"Brésil",continent:"Amérique du Sud",team:"Santos",captain:null,tall:false,shootsLeft:false,veteran:true},
+  {id:13,name:"Luka Modrić",num:14,pos:"M",posLabel:"Milieu",country:"Croatie",continent:"Europe",team:"AC Milan",captain:null,tall:false,shootsLeft:false,veteran:true},
+  {id:14,name:"Robert Lewandowski",num:9,pos:"A",posLabel:"Attaquant",country:"Pologne",continent:"Europe",team:"Barcelone",captain:null,tall:true,shootsLeft:false,veteran:true},
+  {id:15,name:"Thibaut Courtois",num:1,pos:"G",posLabel:"Gardien",country:"Belgique",continent:"Europe",team:"Real Madrid",captain:null,tall:true,shootsLeft:false,veteran:true},
+  {id:16,name:"Alisson Becker",num:1,pos:"G",posLabel:"Gardien",country:"Brésil",continent:"Amérique du Sud",team:"Liverpool",captain:null,tall:true,shootsLeft:false,veteran:true}
+].map(p=>({...p, active:true, numberRetired:false, hallOfFame:false, stanleyCup:false, before1980:false, era:"Actif"}));
+
+const LEGENDS = [
+  {id:101,name:"Pelé",num:10,pos:"A",posLabel:"Attaquant",country:"Brésil",continent:"Amérique du Sud",team:"Santos",captain:"C",tall:false,shootsLeft:false,veteran:true,active:false,numberRetired:true,hallOfFame:true,stanleyCup:true,before1980:true,era:"Légende"},
+  {id:102,name:"Diego Maradona",num:10,pos:"M",posLabel:"Milieu",country:"Argentine",continent:"Amérique du Sud",team:"Napoli",captain:"C",tall:false,shootsLeft:true,veteran:true,active:false,numberRetired:true,hallOfFame:true,stanleyCup:true,before1980:false,era:"Légende"},
+  {id:103,name:"Johan Cruyff",num:14,pos:"A",posLabel:"Attaquant",country:"Pays-Bas",continent:"Europe",team:"Ajax",captain:"C",tall:false,shootsLeft:false,veteran:true,active:false,numberRetired:true,hallOfFame:true,stanleyCup:false,before1980:true,era:"Légende"},
+  {id:104,name:"Zinédine Zidane",num:10,pos:"M",posLabel:"Milieu",country:"France",continent:"Europe",team:"Real Madrid",captain:"C",tall:true,shootsLeft:false,veteran:true,active:false,numberRetired:false,hallOfFame:true,stanleyCup:true,before1980:false,era:"Légende"},
+  {id:105,name:"Ronaldinho",num:10,pos:"A",posLabel:"Attaquant",country:"Brésil",continent:"Amérique du Sud",team:"Barcelone",captain:null,tall:false,shootsLeft:false,veteran:true,active:false,numberRetired:false,hallOfFame:true,stanleyCup:true,before1980:false,era:"Légende"},
+  {id:106,name:"David Beckham",num:7,pos:"M",posLabel:"Milieu",country:"Angleterre",continent:"Europe",team:"Manchester United",captain:"C",tall:false,shootsLeft:false,veteran:true,active:false,numberRetired:false,hallOfFame:true,stanleyCup:false,before1980:false,era:"Légende"},
+  {id:107,name:"Franz Beckenbauer",num:5,pos:"D",posLabel:"Défenseur",country:"Allemagne",continent:"Europe",team:"Bayern Munich",captain:"C",tall:false,shootsLeft:false,veteran:true,active:false,numberRetired:true,hallOfFame:true,stanleyCup:true,before1980:true,era:"Légende"},
+  {id:108,name:"Ronaldo Nazário",num:9,pos:"A",posLabel:"Attaquant",country:"Brésil",continent:"Amérique du Sud",team:"Real Madrid",captain:null,tall:false,shootsLeft:false,veteran:true,active:false,numberRetired:false,hallOfFame:true,stanleyCup:true,before1980:false,era:"Légende"}
+];
+
+const PLAYERS = [...CURRENT, ...LEGENDS];
+
+const EXTRA_INFO = {
+  1:{birthYear:1987,start:2023,end:null,cups:9},
+  2:{birthYear:1985,start:2023,end:null,cups:6},
+  3:{birthYear:1998,start:2024,end:null,cups:1},
+  4:{birthYear:2000,start:2022,end:null,cups:0},
+  5:{birthYear:1991,start:2025,end:null,cups:6},
+  6:{birthYear:2000,start:2018,end:null,cups:1},
+  7:{birthYear:2003,start:2023,end:null,cups:1},
+  8:{birthYear:1992,start:2017,end:null,cups:0},
+  9:{birthYear:1993,start:2023,end:null,cups:1},
+  10:{birthYear:1991,start:2018,end:null,cups:1},
+  11:{birthYear:2000,start:2018,end:null,cups:1},
+  12:{birthYear:1992,start:2025,end:null,cups:1},
+  13:{birthYear:1985,start:2025,end:null,cups:6},
+  14:{birthYear:1988,start:2022,end:null,cups:0},
+  15:{birthYear:1992,start:2018,end:null,cups:2},
+  16:{birthYear:1992,start:2018,end:null,cups:0},
+  101:{birthYear:1940,start:1956,end:1974,cups:4},
+  102:{birthYear:1960,start:1984,end:1991,cups:1},
+  103:{birthYear:1947,start:1964,end:1978,cups:0},
+  104:{birthYear:1972,start:2001,end:2006,cups:2},
+  105:{birthYear:1980,start:2003,end:2008,cups:2},
+  106:{birthYear:1975,start:1992,end:2003,cups:2},
+  107:{birthYear:1945,start:1964,end:1977,cups:4},
+  108:{birthYear:1976,start:1996,end:2007,cups:2}
+};
+PLAYERS.forEach(p=>{
+  const e = EXTRA_INFO[p.id];
+  if(e){
+    p.birthYear = e.birthYear;
+    p.tenureStart = e.start;
+    p.tenureEnd = e.end;
+    p.tenureLabel = e.end ? `${e.start}\u2013${e.end}` : `${e.start}\u2013pr\u00e9sent`;
+    p.cups = e.cups;
+  }
+});
+
+const SOLO_PLAYERS = [...PLAYERS];
+const DUEL_PLAYERS = SOLO_PLAYERS;
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDhAhnY6cLeVIFZ0QjfIzipwb6R77tsL_8",
+  authDomain: "guess-who-ch.firebaseapp.com",
+  databaseURL: "https://guess-who-ch-default-rtdb.firebaseio.com",
+  projectId: "guess-who-ch"
+};
+const MULTI_ROOM_PREFIX = "soccerRooms/";
+
+const CONTENT_URL = "";
+
+async function loadRemoteContent(){
+  if(!CONTENT_URL) return;
+  try{
+    const res = await fetch(CONTENT_URL, {cache:"no-store"});
+    if(!res.ok) return;
+    const data = await res.json();
+    if(Array.isArray(data.players)){
+      data.players.forEach(p=>{
+        const existing = PLAYERS.find(e=>e.id===p.id);
+        if(existing){ Object.assign(existing, p); }
+        else { PLAYERS.push(p); SOLO_PLAYERS.push(p); }
+      });
+    }
+    if(Array.isArray(data.questions)){
+      data.questions.forEach(q=>{
+        if(typeof q.field === "string" && typeof q.text === "string"){
+          QUESTION_POOL.push({text:q.text, test:p=>Boolean(p[q.field])});
+        }
+      });
+    }
+  }catch(e){}
+}
+
+const QUESTION_POOL = [
+  {text:"Est-ce un attaquant?", test:p=>p.pos==="A"},
+  {text:"Est-ce un milieu de terrain?", test:p=>p.pos==="M"},
+  {text:"Est-ce un défenseur?", test:p=>p.pos==="D"},
+  {text:"Est-ce un gardien de but?", test:p=>p.pos==="G"},
+  {text:"Est-il originaire d'Amérique du Sud?", test:p=>p.continent==="Amérique du Sud"},
+  {text:"Est-il originaire d'Europe?", test:p=>p.continent==="Europe"},
+  {text:"Est-il originaire d'Amérique du Nord?", test:p=>p.continent==="Amérique du Nord"},
+  {text:"Porte-t-il le brassard de capitaine?", test:p=>p.captain!==null},
+  {text:"Tire-t-il (ou joue-t-il) du pied gauche?", test:p=>p.shootsLeft},
+  {text:"Mesure-t-il plus de 6 pi (183 cm)?", test:p=>p.tall},
+  {text:"A-t-il joué dans la LNH... euh, avant 1980?", test:p=>p.before1980},
+  {text:"Est-il membre d'un temple de la renommée du football?", test:p=>p.hallOfFame},
+  {text:"Son numéro a-t-il été retiré par un club?", test:p=>p.numberRetired},
+  {text:"A-t-il remporté au moins un grand trophée majeur?", test:p=>p.cups>0},
+  {text:"Est-il né avant 1990?", test:p=>p.birthYear<1990},
+  {text:"Est-il toujours actif aujourd'hui?", test:p=>p.active},
+  {text:"Son prénom commence-t-il par une voyelle?", test:p=>"AEIOU".includes(p.name.trim()[0].toUpperCase())},
+  {text:"Son nom de famille compte-t-il plus de 7 lettres?", test:p=>{const parts=p.name.split(' ');const last=parts[parts.length-1].replace(/[^A-Za-zÀ-ÿ]/g,'');return last.length>7;}}
+];
+let QUESTIONS = [];
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function bindTap(el, handler){
+  if(!el) return;
+  el.addEventListener('touchstart', function(){
+    const active = document.activeElement;
+    if(active && active !== el && typeof active.blur === 'function') active.blur();
+  }, {passive:true});
+  el.addEventListener('click', handler);
+}
+
+const HINTS = [
+  p=>`Il porte le numéro ${p.num}.`,
+  p=>`Il joue à la position de ${p.posLabel.toLowerCase()}.`,
+  p=>`Il est originaire de ${p.country}.`,
+  p=>p.captain ? `Il porte le brassard de capitaine.` : `Il ne porte pas le brassard de capitaine.`,
+  p=>p.active ? `C'est un joueur toujours actif.` : `C'est une légende du passé.`
+];
+
+function initials(name){
+  return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+}
+
+function handleAvatarError(imgEl, playerId){
+  const p = PLAYERS.find(pl=>pl.id===playerId);
+  if(p && imgEl && imgEl.parentElement) imgEl.parentElement.innerHTML = mascotSVG(p);
+}
+
+function avatarInner(p){
+  if(p.photo){
+    return `<img src="${p.photo}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;" onerror="handleAvatarError(this, ${p.id})">`;
+  }
+  return mascotSVG(p);
+}
+
+const KIT_COLORS = {G:'#E8B923', D:'#1B4F9C', M:'#1E8449', A:'#C0392B'};
+const KIT_DARK   = {G:'#A8820F', D:'#123568', M:'#155C34', A:'#7E241C'};
+const MASCOT_SKIN = ['#F2C29B','#E0A978','#C68F5B','#8D5524','#FBD8B4'];
+const MASCOT_HAIR = ['#2B1B0E','#4A2E1A','#8B5A2B','#C9A961','#1A1A1A','#6B4226'];
+
+function seedFrom(id, salt){
+  const x = Math.sin(id * 12.9898 + salt * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+// A small original soccer-player silhouette — purely decorative, not a
+// likeness of anyone real. Kit colored by position, skin/hair vary by id.
+function mascotSVG(p){
+  const color = KIT_COLORS[p.pos] || '#C0392B';
+  const dark = KIT_DARK[p.pos] || '#7E241C';
+  const skin = MASCOT_SKIN[Math.floor(seedFrom(p.id, 4) * MASCOT_SKIN.length)];
+  const hair = MASCOT_HAIR[Math.floor(seedFrom(p.id, 5) * MASCOT_HAIR.length)];
+  const bald = seedFrom(p.id, 6) > 0.82;
+  const leanRight = seedFrom(p.id, 1) > 0.5;
+  const flip = leanRight ? '' : `transform="scale(-1,1) translate(-40,0)"`;
+  return `<svg viewBox="0 0 40 40" width="100%" height="100%" style="display:block;">
+    <g ${flip}>
+      <line x1="5" y1="35.5" x2="35" y2="35.5" stroke="#3A4258" stroke-width="1.2"/>
+      <circle cx="9" cy="33.5" r="2.6" fill="#F4F6F8" stroke="#33384A" stroke-width="0.6"/>
+      <polygon points="7.8,33.5 9,32.4 10.2,33.5 9.7,34.7 8.3,34.7" fill="#33384A"/>
+      <polygon points="14,25 26,25 24.5,35 15.5,35" fill="${dark}"/>
+      <line x1="14" y1="30" x2="26" y2="30" stroke="${color}" stroke-width="1"/>
+      <path d="M13 13 Q20 9 27 13 L26 26 L14 26 Z" fill="${color}"/>
+      <line x1="14" y1="19" x2="9.5" y2="25" stroke="${skin}" stroke-width="2.4" stroke-linecap="round"/>
+      ${bald ? '' : `<path d="M15.5 6.3 Q20 3 24.5 6.3" stroke="${hair}" stroke-width="2.1" fill="none" stroke-linecap="round"/>`}
+      <circle cx="20" cy="8.5" r="4.2" fill="${skin}"/>
+    </g>
+  </svg>`;
+}
+
+let secret = null;
+let eliminated = new Set();
+let askedIdx = new Set();
+let hintsLeft = 3;
+
+const HINT_COST = 5;
+const COIN_STORAGE_KEY = 'quiEstCeCoinsGlobal';
+function loadSavedCoins(){
+  try{
+    const saved = localStorage.getItem(COIN_STORAGE_KEY);
+    if(saved !== null){ const n = parseInt(saved, 10); if(!isNaN(n)) return n; }
+  }catch(e){}
+  return 20;
+}
+let coinBalance = loadSavedCoins();
+const coinCountEl = document.getElementById('coinCount');
+coinCountEl.textContent = coinBalance;
+function saveCoins(){ try{ localStorage.setItem(COIN_STORAGE_KEY, String(coinBalance)); }catch(e){} }
+function addCoins(n){ coinBalance += n; coinCountEl.textContent = coinBalance; saveCoins(); }
+function spendCoins(n){ if(coinBalance < n) return false; coinBalance -= n; coinCountEl.textContent = coinBalance; saveCoins(); return true; }
+
+const gridEl = document.getElementById('grid');
+const qgridEl = document.getElementById('qgrid');
+const answerbox = document.getElementById('answerbox');
+const logEl = document.getElementById('log');
+const remCount = document.getElementById('remCount');
+const qCount = document.getElementById('qCount');
+const guessSelect = document.getElementById('guessSelect');
+const hintCounter = document.getElementById('hintCounter');
+const hintBtn = document.getElementById('hintBtn');
+
+function renderRoster(){
+  gridEl.innerHTML = '';
+  guessSelect.innerHTML = '<option value="">Faire une supposition…</option>';
+  DUEL_PLAYERS.forEach(p=>{
+    const card = document.createElement('div');
+    card.className = 'card' + (eliminated.has(p.id)?' eliminated':'');
+    card.innerHTML = `
+      <div class="cardface">
+        <div class="front" data-id="${p.id}">
+          <div class="cardbg">${avatarInner(p)}</div>
+          <div class="cardscrim"></div>
+          <span class="era ${p.active?'actif':'legende'}">${p.active?'Actif':'Légende'}</span>
+          <span class="cnum">${p.num}</span>
+          <div class="cardtext">
+            <div class="cname">${p.name}</div>
+            <div class="cpos">${p.posLabel}</div>
+          </div>
+        </div>
+        <div class="back"><span>écarté</span></div>
+      </div>`;
+    card.querySelector('.front').addEventListener('click', ()=>toggleEliminate(p.id));
+    card.querySelector('.back').addEventListener('click', ()=>toggleEliminate(p.id));
+    gridEl.appendChild(card);
+    if(!eliminated.has(p.id)){
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = `#${p.num} ${p.name}`;
+      guessSelect.appendChild(opt);
+    }
+  });
+  remCount.textContent = DUEL_PLAYERS.length - eliminated.size;
+}
+
+function toggleEliminate(id){
+  if(eliminated.has(id)) eliminated.delete(id);
+  else eliminated.add(id);
+  renderRoster();
+}
+
+function renderQuestions(){
+  qgridEl.innerHTML = '';
+  QUESTIONS.forEach((q, idx)=>{
+    const b = document.createElement('button');
+    b.className = 'qbtn';
+    b.textContent = q.text;
+    b.disabled = askedIdx.has(idx);
+    b.addEventListener('click', ()=>askQuestion(idx));
+    qgridEl.appendChild(b);
+  });
+}
+
+function askQuestion(idx){
+  if(askedIdx.has(idx)) return;
+  askedIdx.add(idx);
+  const q = QUESTIONS[idx];
+  const answer = q.test(secret);
+  answerbox.innerHTML = `<span class="badge ${answer?'oui':'non'}">${answer?'Oui':'Non'}</span><span>${q.text}</span>`;
+  const item = document.createElement('div');
+  item.className = 'log-item';
+  item.textContent = `${answer?'Oui':'Non'} — ${q.text}`;
+  logEl.prepend(item);
+  qCount.textContent = askedIdx.size;
+  DUEL_PLAYERS.forEach(p=>{ if(q.test(p) !== answer) eliminated.add(p.id); });
+  renderQuestions();
+  renderRoster();
+}
+
+document.getElementById('logToggle').addEventListener('click', ()=>{
+  const open = logEl.classList.toggle('open');
+  document.getElementById('logToggle').textContent = open ? "Masquer l'historique ▴" : "Voir l'historique des réponses ▾";
+});
+
+function updateHintButton(){
+  if(hintsLeft > 0){
+    hintBtn.textContent = 'Obtenir un indice';
+    hintBtn.disabled = false;
+    hintCounter.textContent = `${hintsLeft} indice${hintsLeft!==1?'s':''} restant${hintsLeft!==1?'s':''}`;
+  } else {
+    hintBtn.textContent = `Acheter un indice (${HINT_COST} pièces)`;
+    hintBtn.disabled = coinBalance < HINT_COST;
+    hintCounter.textContent = 'Indices gratuits épuisés';
+  }
+}
+bindTap(hintBtn, ()=>{
+  if(hintsLeft > 0){ hintsLeft--; } else { if(!spendCoins(HINT_COST)) return; }
+  const hintFn = HINTS[Math.floor(Math.random()*HINTS.length)];
+  answerbox.innerHTML = `<span class="badge" style="background:var(--or);color:#2a2107;">Indice</span><span>${hintFn(secret)}</span>`;
+  updateHintButton();
+});
+
+bindTap(document.getElementById('guessBtn'), ()=>{
+  const val = guessSelect.value;
+  if(!val){
+    answerbox.innerHTML = `<span style="color:#F5C6CB;">Choisis d'abord un joueur dans la liste déroulante.</span>`;
+    return;
+  }
+  const guess = DUEL_PLAYERS.find(p=>p.id===Number(val));
+  const win = guess.id === secret.id;
+  addCoins(win ? 12 : 3);
+  updateHintButton();
+  showResult(win);
+});
+
+let lastResultMode = 'duel';
+function showResult(win, who, mode){
+  const player = who || secret;
+  lastResultMode = mode || 'duel';
+  const overlay = document.getElementById('overlay');
+  const tag = document.getElementById('resultTag');
+  tag.textContent = win ? 'GAGNÉ' : 'RATÉ';
+  tag.className = 'result-tag ' + (win?'win':'lose');
+  document.getElementById('revealAvatar').innerHTML = avatarInner(player);
+  document.getElementById('revealName').textContent = `#${player.num} ${player.name}`;
+  document.getElementById('revealSub').textContent = win
+    ? `Bien joué — c'était bien lui.`
+    : `Le joueur secret était ${player.name}. Retente ta chance.`;
+  overlay.classList.add('show');
+}
+
+document.getElementById('playAgainBtn').addEventListener('click', ()=>{
+  document.getElementById('overlay').classList.remove('show');
+  if(lastResultMode === 'solo') newSoloGame();
+  else if(lastResultMode === 'multi'){ if(roomRef) roomRef.remove(); leaveMultiRoom(); }
+  else newGame();
+});
+document.getElementById('newGameBtn').addEventListener('click', newGame);
+
+function newGame(){
+  secret = DUEL_PLAYERS[Math.floor(Math.random()*DUEL_PLAYERS.length)];
+  QUESTIONS = shuffle(QUESTION_POOL).slice(0, 12);
+  eliminated = new Set();
+  askedIdx = new Set();
+  hintsLeft = 3;
+  updateHintButton();
+  qCount.textContent = 0;
+  answerbox.innerHTML = `<span style="color:#7FA88F;">Choisis une question pour commencer.</span>`;
+  logEl.innerHTML = '';
+  logEl.classList.remove('open');
+  document.getElementById('logToggle').textContent = "Voir l'historique des réponses ▾";
+  renderRoster();
+  renderQuestions();
+}
+
+/* ---------- Mode tabs ---------- */
+const tabDuel = document.getElementById('tabDuel');
+const tabSolo = document.getElementById('tabSolo');
+const tabLevels = document.getElementById('tabLevels');
+const tabMulti = document.getElementById('tabMulti');
+const duelMode = document.getElementById('duelMode');
+const soloModeEl = document.getElementById('soloMode');
+const levelsModeEl = document.getElementById('levelsMode');
+const multiModeEl = document.getElementById('multiMode');
+const duelGuessbar = document.getElementById('duelGuessbar');
+
+tabDuel.addEventListener('click', ()=>switchTab('duel'));
+tabSolo.addEventListener('click', ()=>switchTab('solo'));
+tabLevels.addEventListener('click', ()=>switchTab('levels'));
+tabMulti.addEventListener('click', ()=>switchTab('multi'));
+
+function switchTab(mode){
+  tabDuel.classList.toggle('active', mode==='duel');
+  tabSolo.classList.toggle('active', mode==='solo');
+  tabLevels.classList.toggle('active', mode==='levels');
+  tabMulti.classList.toggle('active', mode==='multi');
+  duelMode.style.display = mode==='duel' ? '' : 'none';
+  soloModeEl.style.display = mode==='solo' ? '' : 'none';
+  levelsModeEl.style.display = mode==='levels' ? '' : 'none';
+  multiModeEl.style.display = mode==='multi' ? '' : 'none';
+  duelGuessbar.style.display = mode==='duel' ? '' : 'none';
+  if(mode==='solo' && !soloSecret) newSoloGame();
+  if(mode==='multi') initMultiTab();
+  if(mode==='levels') renderLevelsList();
+}
+
+/* ---------- Solo mode ---------- */
+const DIFFICULTY = {
+  facile:    {tries:9, hints:3, blurStart:8,  blurStep:1.2, revealBadgesFromStart:true},
+  normal:    {tries:6, hints:2, blurStart:14, blurStep:2.5, revealBadgesFromStart:true},
+  difficile: {tries:4, hints:1, blurStart:22, blurStep:4,   revealBadgesFromStart:false}
+};
+let soloDifficulty = 'normal';
+let soloSecret = null;
+let soloTriesLeft = 6;
+let soloHintsLeft = 2;
+let soloGuessedIds = new Set();
+
+const soloNumEl = document.getElementById('soloNum');
+const soloCardEl = document.getElementById('soloCard');
+const soloEraEl = document.getElementById('soloEra');
+const soloContinentEl = document.getElementById('soloContinent');
+const soloPosEl = document.getElementById('soloPos');
+const soloScrambleWrap = document.getElementById('soloScrambleWrap');
+const silhouettewrapEl = document.getElementById('silhouettewrap');
+const soloImgToggle = document.getElementById('soloImgToggle');
+let soloShowImage = true;
+
+soloImgToggle.addEventListener('change', ()=>{
+  soloShowImage = soloImgToggle.checked;
+  applySoloImageVisibility();
+});
+function applySoloImageVisibility(){ silhouettewrapEl.style.display = soloShowImage ? '' : 'none'; }
+
+const soloPickToggle = document.getElementById('soloPickToggle');
+const soloPickGridEl = document.getElementById('soloPickGrid');
+let soloShowPickGrid = true;
+soloPickToggle.addEventListener('change', ()=>{
+  soloShowPickGrid = soloPickToggle.checked;
+  applySoloPickGridVisibility();
+});
+function applySoloPickGridVisibility(){ soloPickGridEl.style.display = soloShowPickGrid ? '' : 'none'; }
+
+function renderSoloPickGrid(){
+  if(!soloShowPickGrid){ soloPickGridEl.innerHTML = ''; return; }
+  soloPickGridEl.innerHTML = SOLO_PLAYERS.map(p=>`
+    <div class="picktile ${soloGuessedIds.has(p.id)?'tried':''}" data-id="${p.id}">
+      <div class="avatar">${avatarInner(p)}</div>
+      <div class="pickname">${p.name}</div>
+    </div>`).join('');
+  soloPickGridEl.querySelectorAll('.picktile:not(.tried)').forEach(el=>{
+    bindTap(el, ()=>{
+      const p = SOLO_PLAYERS.find(pl=>pl.id===Number(el.dataset.id));
+      if(p) processSoloGuess(p);
+    });
+  });
+}
+
+document.querySelectorAll('.difficulty').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    soloDifficulty = btn.dataset.diff;
+    document.querySelectorAll('.difficulty').forEach(b=>b.classList.toggle('active', b===btn));
+    newSoloGame();
+  });
+});
+
+const soloTriesEl = document.getElementById('soloTries');
+const soloInput = document.getElementById('soloInput');
+const soloGuessesEl = document.getElementById('soloGuesses');
+const soloHintBtn = document.getElementById('soloHintBtn');
+const soloHintCounter = document.getElementById('soloHintCounter');
+const soloHintBox = document.getElementById('soloHintBox');
+const soloGuessError = document.getElementById('soloGuessError');
+
+function arrowCompare(foundVal, secretVal){
+  if(foundVal === secretVal) return {sym:'\u2713', hit:true};
+  return {sym: secretVal > foundVal ? '\u2191' : '\u2193', hit:false};
+}
+
+let soloNameLetters = [];
+let soloBoxFill = [];
+let soloPoolOrder = [];
+let soloPoolUsed = [];
+
+function buildSoloLetterPuzzle(){
+  const words = soloSecret.name.split(' ');
+  soloNameLetters = [];
+  words.forEach((w, wi)=>{ w.split('').forEach(ch=> soloNameLetters.push({ch, wordIndex:wi})); });
+  soloBoxFill = new Array(soloNameLetters.length).fill(null);
+  soloPoolUsed = new Array(soloNameLetters.length).fill(false);
+  soloPoolOrder = shuffle(soloNameLetters.map((_,i)=>i));
+  drawSoloBoxes();
+  drawSoloPool();
+}
+function drawSoloBoxes(){
+  const words = soloSecret.name.split(' ');
+  let idx = 0; let html = '';
+  words.forEach(w=>{
+    html += '<div class="wordgroup">';
+    for(let i=0;i<w.length;i++){
+      const tileIdx = soloBoxFill[idx];
+      const ch = tileIdx!==null ? soloNameLetters[tileIdx].ch : '';
+      html += `<div class="letterbox ${tileIdx!==null?'filled':''}" data-slot="${idx}">${ch}</div>`;
+      idx++;
+    }
+    html += '</div>';
+  });
+  soloBoxesEl.innerHTML = html;
+  soloBoxesEl.querySelectorAll('.letterbox.filled').forEach(el=>{
+    el.addEventListener('click', ()=> clearSoloSlot(Number(el.dataset.slot)));
+  });
+}
+function drawSoloPool(){
+  soloPoolEl.innerHTML = soloPoolOrder.map(ti=>{
+    const used = soloPoolUsed[ti];
+    return `<div class="lettertile ${used?'used':''}" data-tile="${ti}">${soloNameLetters[ti].ch.toUpperCase()}</div>`;
+  }).join('');
+  soloPoolEl.querySelectorAll('.lettertile:not(.used)').forEach(el=>{
+    el.addEventListener('click', ()=> placeSoloTile(Number(el.dataset.tile)));
+  });
+}
+function placeSoloTile(tileIdx){
+  const slot = soloBoxFill.findIndex(v=>v===null);
+  if(slot === -1) return;
+  soloBoxFill[slot] = tileIdx;
+  soloPoolUsed[tileIdx] = true;
+  drawSoloBoxes(); drawSoloPool();
+  maybeSyncSoloInput();
+}
+function clearSoloSlot(slot){
+  const tileIdx = soloBoxFill[slot];
+  if(tileIdx===null) return;
+  soloBoxFill[slot] = null;
+  soloPoolUsed[tileIdx] = false;
+  drawSoloBoxes(); drawSoloPool();
+}
+function maybeSyncSoloInput(){
+  if(!soloBoxFill.every(v=>v!==null)) return;
+  const words = soloSecret.name.split(' ');
+  let idx = 0;
+  const assembled = words.map(w=>{
+    let out = '';
+    for(let i=0;i<w.length;i++){ out += soloNameLetters[soloBoxFill[idx]].ch; idx++; }
+    return out;
+  }).join(' ');
+  soloInput.value = assembled;
+}
+
+const soloBoxesEl = document.getElementById('soloBoxes');
+const soloPoolEl = document.getElementById('soloPool');
+const POS_GROUP_CLASS = {A:'', M:'pos-milieu', D:'pos-defense', G:'pos-gardien'};
+
+function newSoloGame(){
+  const cfg = DIFFICULTY[soloDifficulty];
+  soloSecret = SOLO_PLAYERS[Math.floor(Math.random()*SOLO_PLAYERS.length)];
+  soloTriesLeft = cfg.tries;
+  soloHintsLeft = cfg.hints;
+  soloGuessedIds = new Set();
+  soloTriesEl.textContent = soloTriesLeft;
+
+  soloNumEl.textContent = soloSecret.num;
+  soloNumEl.style.filter = `blur(${cfg.blurStart}px)`;
+  soloCardEl.className = 'silhouettecard ' + (POS_GROUP_CLASS[soloSecret.pos] || '');
+  buildSoloLetterPuzzle();
+  applySoloImageVisibility();
+  renderSoloPickGrid();
+  applySoloPickGridVisibility();
+
+  if(cfg.revealBadgesFromStart){
+    soloEraEl.style.visibility = 'visible';
+    soloContinentEl.style.visibility = 'visible';
+    soloPosEl.style.visibility = 'visible';
+    soloScrambleWrap.style.display = '';
+  } else {
+    soloEraEl.style.visibility = 'hidden';
+    soloContinentEl.style.visibility = 'hidden';
+    soloPosEl.style.visibility = 'hidden';
+    soloScrambleWrap.style.display = 'none';
+  }
+  soloEraEl.textContent = soloSecret.active ? 'Actif' : 'Légende';
+  soloEraEl.className = 'era ' + (soloSecret.active ? 'actif' : 'legende');
+  soloContinentEl.textContent = soloSecret.continent;
+  soloPosEl.textContent = soloSecret.posLabel;
+
+  soloInput.value = '';
+  soloGuessesEl.innerHTML = '';
+  soloGuessError.style.display = 'none';
+  updateSoloHintButton();
+  soloHintBox.style.display = 'none';
+}
+
+function revealSoloBadges(){
+  soloEraEl.style.visibility = 'visible';
+  soloContinentEl.style.visibility = 'visible';
+  soloPosEl.style.visibility = 'visible';
+  soloScrambleWrap.style.display = '';
+}
+function updateSoloBlur(){
+  const cfg = DIFFICULTY[soloDifficulty];
+  const usedTries = cfg.tries - soloTriesLeft;
+  const blurPx = Math.max(0, cfg.blurStart - usedTries * cfg.blurStep);
+  soloNumEl.style.filter = `blur(${blurPx}px)`;
+}
+
+function soloGuess(){
+  const raw = soloInput.value.trim();
+  soloGuessError.style.display = 'none';
+  if(soloTriesLeft<=0) return;
+  if(!raw){
+    soloGuessError.textContent = 'Écris un nom avant de deviner.';
+    soloGuessError.style.display = 'block';
+    return;
+  }
+  const found = SOLO_PLAYERS.find(p=>p.name.toLowerCase() === raw.toLowerCase());
+  if(!found){
+    soloGuessError.textContent = `« ${raw} » ne correspond à aucun joueur de la liste.`;
+    soloGuessError.style.display = 'block';
+    return;
+  }
+  soloInput.value = '';
+  processSoloGuess(found);
+}
+
+function processSoloGuess(found){
+  if(soloTriesLeft<=0) return;
+  soloGuessError.style.display = 'none';
+  if(soloGuessedIds.has(found.id)){
+    soloGuessError.textContent = 'Déjà essayé — propose un autre nom.';
+    soloGuessError.style.display = 'block';
+    return;
+  }
+  soloGuessedIds.add(found.id);
+  renderSoloPickGrid();
+
+  const win = found.id === soloSecret.id;
+  const row = document.createElement('div');
+  row.className = 'guesscard';
+  const posHit = found.pos === soloSecret.pos;
+  const countryHit = found.country === soloSecret.country;
+  const teamHit = found.team === soloSecret.team;
+  const born = arrowCompare(found.birthYear, soloSecret.birthYear);
+  const cupsCmp = arrowCompare(found.cups, soloSecret.cups);
+  row.innerHTML = `
+    <div class="guesscard-head">
+      <div class="avatar">${avatarInner(found)}</div>
+      <span class="guesscard-name">${found.name}</span>
+      ${win ? '<span class="wintag">✓ Trouvé</span>' : ''}
+    </div>
+    <div class="statrow">
+      <div class="stattile ${posHit?'hit':'miss'}"><b>POSITION</b><span>${found.posLabel}</span></div>
+      <div class="stattile ${countryHit?'hit':'miss'}"><b>PAYS</b><span>${found.country}</span></div>
+      <div class="stattile ${born.hit?'hit':'miss'}"><b>NÉ EN</b><span>${found.birthYear}${born.sym}</span></div>
+    </div>
+    <div class="statrow">
+      <div class="stattile ${teamHit?'hit':'miss'}"><b>CLUB</b><span>${found.team}</span></div>
+      <div class="stattile ${cupsCmp.hit?'hit':'miss'}"><b>TROPHÉES</b><span>${found.cups}${cupsCmp.hit?'':(cupsCmp.sym)}</span></div>
+    </div>`;
+  soloGuessesEl.prepend(row);
+
+  if(win){
+    soloNumEl.style.filter = 'blur(0px)';
+    addCoins(10 + soloTriesLeft*2);
+    updateSoloHintButton();
+    showResult(true, soloSecret, 'solo');
+    return;
+  }
+  soloTriesLeft--;
+  soloTriesEl.textContent = soloTriesLeft;
+  updateSoloBlur();
+  if(!DIFFICULTY[soloDifficulty].revealBadgesFromStart) revealSoloBadges();
+  if(soloTriesLeft<=0){
+    soloNumEl.style.filter = 'blur(0px)';
+    addCoins(3);
+    updateSoloHintButton();
+    showResult(false, soloSecret, 'solo');
+  }
+}
+
+bindTap(document.getElementById('soloGuessBtn'), soloGuess);
+soloInput.addEventListener('keydown', e=>{ if(e.key==='Enter') soloGuess(); });
+document.getElementById('newSoloBtn').addEventListener('click', newSoloGame);
+
+function updateSoloHintButton(){
+  if(soloHintsLeft > 0){
+    soloHintBtn.textContent = 'Obtenir un indice';
+    soloHintBtn.disabled = false;
+    soloHintCounter.textContent = `${soloHintsLeft} indice${soloHintsLeft!==1?'s':''} restant${soloHintsLeft!==1?'s':''}`;
+  } else {
+    soloHintBtn.textContent = `Acheter un indice (${HINT_COST} pièces)`;
+    soloHintBtn.disabled = coinBalance < HINT_COST;
+    soloHintCounter.textContent = 'Indices gratuits épuisés';
+  }
+}
+bindTap(soloHintBtn, ()=>{
+  if(soloHintsLeft > 0){ soloHintsLeft--; } else { if(!spendCoins(HINT_COST)) return; }
+  const hintFn = HINTS[Math.floor(Math.random()*HINTS.length)];
+  soloHintBox.style.display = 'flex';
+  soloHintBox.innerHTML = `<span class="badge" style="background:var(--or);color:#2a2107;">Indice</span><span>${hintFn(soloSecret)}</span>`;
+  updateSoloHintButton();
+});
+
+/* ---------- Levels mode ---------- */
+const LEVELS_CONFIG = [
+  {tries:9, blurStart:6,  blurStep:1.5, hints:3, decoys:0},
+  {tries:7, blurStart:10, blurStep:2,   hints:2, decoys:2},
+  {tries:6, blurStart:14, blurStep:2.5, hints:2, decoys:4},
+  {tries:5, blurStart:18, blurStep:3,   hints:1, decoys:6}
+];
+function buildLevels(){
+  const sizes = [8,8,4,4];
+  const out = [];
+  let idx = 0;
+  sizes.forEach((sz,i)=>{
+    out.push({ name:`Niveau ${i+1}`, players: DUEL_PLAYERS.slice(idx, idx+sz), cfg: LEVELS_CONFIG[i] });
+    idx += sz;
+  });
+  return out;
+}
+const LEVELS = buildLevels();
+
+const LEVELS_STORAGE_KEY = 'quiEstCeLevelsSoccer';
+function loadLevelProgress(){
+  try{
+    const raw = localStorage.getItem(LEVELS_STORAGE_KEY);
+    if(raw){ const parsed = JSON.parse(raw); if(Array.isArray(parsed)) return parsed; }
+  }catch(e){}
+  return [];
+}
+let levelProgress = loadLevelProgress();
+while(levelProgress.length < LEVELS.length) levelProgress.push({completed:[]});
+function saveLevelProgress(){ try{ localStorage.setItem(LEVELS_STORAGE_KEY, JSON.stringify(levelProgress)); }catch(e){} }
+function isLevelUnlocked(i){
+  if(i===0) return true;
+  return levelProgress[i-1].completed.length >= LEVELS[i-1].players.length;
+}
+
+const levelsListEl = document.getElementById('levelsList');
+const levelsListView = document.getElementById('levelsListView');
+const levelsPlayView = document.getElementById('levelsPlayView');
+const levelsCompleteView = document.getElementById('levelsCompleteView');
+const lvlProgressPill = document.getElementById('lvlProgressPill');
+const lvlCardEl = document.getElementById('lvlCard');
+const lvlEraEl = document.getElementById('lvlEra');
+const lvlContinentEl = document.getElementById('lvlContinent');
+const lvlNumEl = document.getElementById('lvlNum');
+const lvlPhotoEl = document.getElementById('lvlPhoto');
+const lvlPosEl = document.getElementById('lvlPos');
+const lvlTriesEl = document.getElementById('lvlTries');
+const lvlInput = document.getElementById('lvlInput');
+const lvlGuessError = document.getElementById('lvlGuessError');
+const lvlGuessesEl = document.getElementById('lvlGuesses');
+const lvlHintBtn = document.getElementById('lvlHintBtn');
+const lvlHintCounter = document.getElementById('lvlHintCounter');
+const lvlHintBox = document.getElementById('lvlHintBox');
+const lvlBoxesEl = document.getElementById('lvlBoxes');
+const lvlPoolEl = document.getElementById('lvlPool');
+const lvlDecoyNote = document.getElementById('lvlDecoyNote');
+
+let currentLevelIndex = 0;
+let lvlSecret = null;
+let lvlTriesLeft = 0;
+let lvlHintsLeft = 0;
+let lvlPoolItems = [];
+let lvlBoxFill = [];
+let lvlPoolUsed = [];
+let lvlWordLengths = [];
+
+function renderLevelsList(){
+  levelsListView.style.display = '';
+  levelsPlayView.style.display = 'none';
+  levelsCompleteView.style.display = 'none';
+  levelsListEl.innerHTML = LEVELS.map((lvl,i)=>{
+    const prog = levelProgress[i];
+    const unlocked = isLevelUnlocked(i);
+    const total = lvl.players.length;
+    const done = Math.min(prog.completed.length, total);
+    return `<div class="levelcard ${unlocked?'':'locked'}" data-idx="${i}">
+      <div class="levelcard-top">
+        <span class="levelname">${lvl.name}</span>
+        ${unlocked?'':'<span class="levellock">🔒</span>'}
+      </div>
+      <div class="levelprogtext">${done}/${total} trouvés</div>
+      <div class="levelbar"><div class="levelbarfill" style="width:${total?(done/total*100):0}%"></div></div>
+    </div>`;
+  }).join('');
+  levelsListEl.querySelectorAll('.levelcard:not(.locked)').forEach(el=>{
+    bindTap(el, ()=> openLevel(Number(el.dataset.idx)));
+  });
+}
+
+function openLevel(i){
+  currentLevelIndex = i;
+  levelsListView.style.display = 'none';
+  levelsCompleteView.style.display = 'none';
+  levelsPlayView.style.display = '';
+  pickNextLevelPlayer();
+}
+document.getElementById('lvlBackBtn').addEventListener('click', renderLevelsList);
+
+function pickNextLevelPlayer(){
+  const lvl = LEVELS[currentLevelIndex];
+  const prog = levelProgress[currentLevelIndex];
+  const remaining = lvl.players.filter(p=>!prog.completed.includes(p.id));
+  if(remaining.length === 0){ finishLevel(); return; }
+
+  lvlSecret = remaining[Math.floor(Math.random()*remaining.length)];
+  const cfg = lvl.cfg;
+  lvlTriesLeft = cfg.tries;
+  lvlHintsLeft = cfg.hints;
+  lvlTriesEl.textContent = lvlTriesLeft;
+  lvlProgressPill.textContent = `${lvl.name} — ${prog.completed.length}/${lvl.players.length}`;
+
+  if(lvlSecret.photo){
+    lvlPhotoEl.onerror = function(){
+      lvlPhotoEl.style.display = 'none';
+      lvlNumEl.style.display = '';
+      lvlNumEl.textContent = lvlSecret.num;
+      lvlNumEl.style.filter = `blur(${cfg.blurStart}px)`;
+    };
+    lvlPhotoEl.src = lvlSecret.photo;
+    lvlPhotoEl.style.display = 'block';
+    lvlPhotoEl.style.filter = `blur(${cfg.blurStart}px)`;
+    lvlNumEl.style.display = 'none';
+  } else {
+    lvlPhotoEl.style.display = 'none';
+    lvlNumEl.style.display = '';
+    lvlNumEl.textContent = lvlSecret.num;
+    lvlNumEl.style.filter = `blur(${cfg.blurStart}px)`;
+  }
+  lvlCardEl.className = 'silhouettecard ' + (POS_GROUP_CLASS[lvlSecret.pos] || '');
+  lvlEraEl.textContent = lvlSecret.active ? 'Actif' : 'Légende';
+  lvlEraEl.className = 'era ' + (lvlSecret.active ? 'actif' : 'legende');
+  lvlContinentEl.textContent = lvlSecret.continent;
+  lvlPosEl.textContent = lvlSecret.posLabel;
+  buildLevelLetterPuzzle();
+
+  lvlInput.value = '';
+  lvlGuessesEl.innerHTML = '';
+  lvlGuessError.style.display = 'none';
+  updateLevelHintButton();
+  lvlHintBox.style.display = 'none';
+}
+
+function buildLevelLetterPuzzle(){
+  const cfg = LEVELS[currentLevelIndex].cfg;
+  const words = lvlSecret.name.split(' ');
+  lvlWordLengths = words.map(w=>w.length);
+  const realLetters = [];
+  words.forEach(w=> w.split('').forEach(ch=> realLetters.push(ch)));
+  const decoyCount = cfg.decoys || 0;
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const decoys = [];
+  for(let i=0;i<decoyCount;i++) decoys.push(alphabet[Math.floor(Math.random()*alphabet.length)]);
+  lvlPoolItems = shuffle([...realLetters.map(ch=>({ch})), ...decoys.map(ch=>({ch}))]);
+  lvlPoolUsed = new Array(lvlPoolItems.length).fill(false);
+  lvlBoxFill = new Array(realLetters.length).fill(null);
+  lvlDecoyNote.textContent = decoyCount > 0
+    ? `${decoyCount} lettre${decoyCount!==1?'s':''} intruse${decoyCount!==1?'s':''} dans le tas — attention!`
+    : '';
+  drawLevelBoxes();
+  drawLevelPool();
+}
+function drawLevelBoxes(){
+  let idx = 0; let html = '';
+  lvlWordLengths.forEach(len=>{
+    html += '<div class="wordgroup">';
+    for(let i=0;i<len;i++){
+      const poolIdx = lvlBoxFill[idx];
+      const ch = poolIdx!==null ? lvlPoolItems[poolIdx].ch : '';
+      html += `<div class="letterbox ${poolIdx!==null?'filled':''}" data-slot="${idx}">${ch}</div>`;
+      idx++;
+    }
+    html += '</div>';
+  });
+  lvlBoxesEl.innerHTML = html;
+  lvlBoxesEl.querySelectorAll('.letterbox.filled').forEach(el=>{
+    el.addEventListener('click', ()=> clearLevelSlot(Number(el.dataset.slot)));
+  });
+}
+function drawLevelPool(){
+  lvlPoolEl.innerHTML = lvlPoolItems.map((item,pi)=>{
+    const used = lvlPoolUsed[pi];
+    return `<div class="lettertile ${used?'used':''}" data-tile="${pi}">${item.ch.toUpperCase()}</div>`;
+  }).join('');
+  lvlPoolEl.querySelectorAll('.lettertile:not(.used)').forEach(el=>{
+    el.addEventListener('click', ()=> placeLevelTile(Number(el.dataset.tile)));
+  });
+}
+function placeLevelTile(poolIdx){
+  const slot = lvlBoxFill.findIndex(v=>v===null);
+  if(slot===-1) return;
+  lvlBoxFill[slot] = poolIdx;
+  lvlPoolUsed[poolIdx] = true;
+  drawLevelBoxes(); drawLevelPool();
+  maybeSyncLevelInput();
+}
+function clearLevelSlot(slot){
+  const poolIdx = lvlBoxFill[slot];
+  if(poolIdx===null) return;
+  lvlBoxFill[slot] = null;
+  lvlPoolUsed[poolIdx] = false;
+  drawLevelBoxes(); drawLevelPool();
+}
+function maybeSyncLevelInput(){
+  if(lvlBoxFill.some(v=>v===null)) return;
+  let idx = 0;
+  const assembled = lvlWordLengths.map(len=>{
+    let out = '';
+    for(let i=0;i<len;i++){ out += lvlPoolItems[lvlBoxFill[idx]].ch; idx++; }
+    return out;
+  }).join(' ');
+  lvlInput.value = assembled;
+}
+
+function updateLevelBlur(){
+  const cfg = LEVELS[currentLevelIndex].cfg;
+  const used = cfg.tries - lvlTriesLeft;
+  const blurPx = Math.max(0, cfg.blurStart - used * cfg.blurStep);
+  if(lvlSecret.photo && lvlPhotoEl.style.display !== 'none'){ lvlPhotoEl.style.filter = `blur(${blurPx}px)`; }
+  else { lvlNumEl.style.filter = `blur(${blurPx}px)`; }
+}
+
+function updateLevelHintButton(){
+  if(lvlHintsLeft > 0){
+    lvlHintBtn.textContent = 'Obtenir un indice';
+    lvlHintBtn.disabled = false;
+    lvlHintCounter.textContent = `${lvlHintsLeft} indice${lvlHintsLeft!==1?'s':''} restant${lvlHintsLeft!==1?'s':''}`;
+  } else {
+    lvlHintBtn.textContent = `Acheter un indice (${HINT_COST} pièces)`;
+    lvlHintBtn.disabled = coinBalance < HINT_COST;
+    lvlHintCounter.textContent = 'Indices gratuits épuisés';
+  }
+}
+bindTap(lvlHintBtn, ()=>{
+  if(lvlHintsLeft > 0){ lvlHintsLeft--; } else { if(!spendCoins(HINT_COST)) return; }
+  const hintFn = HINTS[Math.floor(Math.random()*HINTS.length)];
+  lvlHintBox.style.display = 'flex';
+  lvlHintBox.innerHTML = `<span class="badge" style="background:var(--or);color:#2a2107;">Indice</span><span>${hintFn(lvlSecret)}</span>`;
+  updateLevelHintButton();
+});
+
+function lvlGuess(){
+  const raw = lvlInput.value.trim();
+  lvlGuessError.style.display = 'none';
+  if(lvlTriesLeft<=0) return;
+  if(!raw){
+    lvlGuessError.textContent = 'Écris un nom avant de deviner.';
+    lvlGuessError.style.display = 'block';
+    return;
+  }
+  const found = DUEL_PLAYERS.find(p=>p.name.toLowerCase() === raw.toLowerCase());
+  if(!found){
+    lvlGuessError.textContent = `« ${raw} » ne correspond à aucun joueur.`;
+    lvlGuessError.style.display = 'block';
+    return;
+  }
+  lvlInput.value = '';
+  const win = found.id === lvlSecret.id;
+  const row = document.createElement('div');
+  row.className = 'guesscard';
+  const posHit = found.pos === lvlSecret.pos;
+  const countryHit = found.country === lvlSecret.country;
+  const teamHit = found.team === lvlSecret.team;
+  const born = arrowCompare(found.birthYear, lvlSecret.birthYear);
+  row.innerHTML = `
+    <div class="guesscard-head">
+      <div class="avatar">${avatarInner(found)}</div>
+      <span class="guesscard-name">${found.name}</span>
+      ${win ? '<span class="wintag">✓ Trouvé</span>' : ''}
+    </div>
+    <div class="statrow">
+      <div class="stattile ${posHit?'hit':'miss'}"><b>POSITION</b><span>${found.posLabel}</span></div>
+      <div class="stattile ${countryHit?'hit':'miss'}"><b>PAYS</b><span>${found.country}</span></div>
+      <div class="stattile ${born.hit?'hit':'miss'}"><b>NÉ EN</b><span>${found.birthYear}${born.sym}</span></div>
+    </div>
+    <div class="statrow">
+      <div class="stattile ${teamHit?'hit':'miss'}"><b>CLUB</b><span>${found.team}</span></div>
+    </div>`;
+  lvlGuessesEl.prepend(row);
+
+  if(win){
+    lvlNumEl.style.filter = 'blur(0px)'; lvlPhotoEl.style.filter = 'blur(0px)';
+    addCoins(8 + lvlTriesLeft);
+    const prog = levelProgress[currentLevelIndex];
+    if(!prog.completed.includes(found.id)) prog.completed.push(found.id);
+    saveLevelProgress();
+    setTimeout(pickNextLevelPlayer, 900);
+    return;
+  }
+  lvlTriesLeft--;
+  lvlTriesEl.textContent = lvlTriesLeft;
+  updateLevelBlur();
+  if(lvlTriesLeft<=0){
+    lvlNumEl.style.filter = 'blur(0px)'; lvlPhotoEl.style.filter = 'blur(0px)';
+    lvlGuessError.textContent = `Plus d'essais — c'était ${lvlSecret.name}. On continue avec quelqu'un d'autre.`;
+    lvlGuessError.style.display = 'block';
+    setTimeout(pickNextLevelPlayer, 1400);
+  }
+}
+bindTap(document.getElementById('lvlGuessBtn'), lvlGuess);
+lvlInput.addEventListener('keydown', e=>{ if(e.key==='Enter') lvlGuess(); });
+
+function finishLevel(){
+  levelsPlayView.style.display = 'none';
+  levelsCompleteView.style.display = '';
+  const justUnlocked = currentLevelIndex+1 < LEVELS.length;
+  addCoins(25);
+  document.getElementById('lvlCompleteText').textContent = justUnlocked
+    ? `Tu as trouvé tout le monde dans ${LEVELS[currentLevelIndex].name} — ${LEVELS[currentLevelIndex+1].name} est débloqué! +25 pièces`
+    : `Tu as trouvé tout le monde dans ${LEVELS[currentLevelIndex].name} — c'était le dernier niveau! +25 pièces`;
+}
+document.getElementById('lvlContinueBtn').addEventListener('click', renderLevelsList);
+
+/* ---------- Multiplayer ---------- */
+let fbDb = null;
+let multiConfigured = false;
+if(FIREBASE_CONFIG.apiKey){
+  try{
+    if(!firebase.apps || !firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    fbDb = firebase.database();
+    multiConfigured = true;
+  }catch(e){ multiConfigured = false; }
+}
+
+const multiNoConfig = document.getElementById('multiNoConfig');
+const multiLobby = document.getElementById('multiLobby');
+const multiWaiting = document.getElementById('multiWaiting');
+const multiPlay = document.getElementById('multiPlay');
+const multiName = document.getElementById('multiName');
+const multiJoinCode = document.getElementById('multiJoinCode');
+const multiLobbyError = document.getElementById('multiLobbyError');
+const multiRoomCode = document.getElementById('multiRoomCode');
+const multiTurnPill = document.getElementById('multiTurnPill');
+const multiMySecret = document.getElementById('multiMySecret');
+const multiQgrid = document.getElementById('multiQgrid');
+const multiAnswerbox = document.getElementById('multiAnswerbox');
+const multiLog = document.getElementById('multiLog');
+const multiGuessSelect = document.getElementById('multiGuessSelect');
+
+let myRole = null;
+let myRoomCode = null;
+let myName = '';
+let roomRef = null;
+let roomData = null;
+let multiQuestions = [];
+let multiAskedIdx = new Set();
+let multiTabInited = false;
+
+function generateRoomCode(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for(let i=0;i<4;i++) code += chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+function initMultiTab(){
+  if(!multiConfigured){ multiNoConfig.style.display = 'block'; multiLobby.style.display = 'none'; return; }
+  multiNoConfig.style.display = 'none';
+  if(!multiTabInited){ populateMultiGuessSelect(); multiTabInited = true; }
+}
+function populateMultiGuessSelect(){
+  multiGuessSelect.innerHTML = '<option value="">Faire une supposition…</option>' +
+    PLAYERS.map(p=>`<option value="${p.id}">#${p.num} ${p.name}</option>`).join('');
+}
+function showLobbyView(view){
+  multiLobby.style.display = view==='lobby' ? '' : 'none';
+  multiWaiting.style.display = view==='waiting' ? '' : 'none';
+  multiPlay.style.display = view==='play' ? '' : 'none';
+}
+
+document.getElementById('multiCreateBtn').addEventListener('click', ()=>{
+  myName = multiName.value.trim() || 'Joueur 1';
+  const code = generateRoomCode();
+  const secretId = PLAYERS[Math.floor(Math.random()*PLAYERS.length)].id;
+  myRole = 'p1'; myRoomCode = code;
+  multiAskedIdx = new Set();
+  multiQuestions = shuffle(QUESTION_POOL).slice(0, 12);
+  fbDb.ref(MULTI_ROOM_PREFIX + code).set({
+    status: 'waiting', turn: 'p1',
+    players: { p1: { name: myName, secretId, connected: true } },
+    log: [], winner: null,
+    createdAt: firebase.database.ServerValue.TIMESTAMP
+  }).then(()=>{
+    multiRoomCode.textContent = code;
+    showLobbyView('waiting');
+    attachRoomListener();
+  }).catch(()=>{
+    multiLobbyError.textContent = "Impossible de créer la partie.";
+    multiLobbyError.style.display = 'block';
+  });
+});
+
+document.getElementById('multiCancelBtn').addEventListener('click', ()=>{
+  if(roomRef) roomRef.remove();
+  leaveMultiRoom();
+});
+
+document.getElementById('multiJoinBtn').addEventListener('click', ()=>{
+  const code = multiJoinCode.value.trim().toUpperCase();
+  myName = multiName.value.trim() || 'Joueur 2';
+  multiLobbyError.style.display = 'none';
+  if(code.length !== 4){
+    multiLobbyError.textContent = 'Entre le code à 4 lettres reçu de ton adversaire.';
+    multiLobbyError.style.display = 'block';
+    return;
+  }
+  const ref = fbDb.ref(MULTI_ROOM_PREFIX + code);
+  ref.get().then(snap=>{
+    const data = snap.val();
+    if(!data){ multiLobbyError.textContent = "Aucune partie trouvée avec ce code."; multiLobbyError.style.display = 'block'; return; }
+    if(data.players && data.players.p2){ multiLobbyError.textContent = "Cette partie est déjà complète."; multiLobbyError.style.display = 'block'; return; }
+    let secretId = PLAYERS[Math.floor(Math.random()*PLAYERS.length)].id;
+    if(data.players && data.players.p1 && secretId === data.players.p1.secretId){
+      const alt = PLAYERS.filter(p=>p.id!==secretId);
+      secretId = alt[Math.floor(Math.random()*alt.length)].id;
+    }
+    myRole = 'p2'; myRoomCode = code;
+    multiAskedIdx = new Set();
+    multiQuestions = shuffle(QUESTION_POOL).slice(0, 12);
+    ref.update({ status: 'playing', 'players/p2': { name: myName, secretId, connected: true } })
+      .then(()=>{ attachRoomListener(); });
+  }).catch(()=>{
+    multiLobbyError.textContent = "Impossible de rejoindre la partie.";
+    multiLobbyError.style.display = 'block';
+  });
+});
+
+function attachRoomListener(){
+  roomRef = fbDb.ref(MULTI_ROOM_PREFIX + myRoomCode);
+  roomRef.on('value', snap=>{
+    roomData = snap.val();
+    if(!roomData){ leaveMultiRoom(); return; }
+    renderMultiRoom();
+  });
+}
+
+function renderMultiRoom(){
+  if(roomData.status === 'waiting'){ showLobbyView('waiting'); multiRoomCode.textContent = myRoomCode; return; }
+  showLobbyView('play');
+  const oppRole = myRole === 'p1' ? 'p2' : 'p1';
+  const me = roomData.players[myRole];
+  const opp = roomData.players[oppRole];
+  const mySecretPlayer = me ? PLAYERS.find(p=>p.id===me.secretId) : null;
+  if(mySecretPlayer){ multiMySecret.textContent = `Tu es : ${mySecretPlayer.name} (#${mySecretPlayer.num}, ${mySecretPlayer.posLabel})`; }
+  if(roomData.status === 'finished'){
+    const won = roomData.winner === myRole;
+    const oppSecretPlayer = opp ? PLAYERS.find(p=>p.id===opp.secretId) : null;
+    showResult(won, oppSecretPlayer || mySecretPlayer, 'multi');
+    return;
+  }
+  const myTurn = roomData.turn === myRole && !!opp;
+  multiTurnPill.innerHTML = !opp ? "En attente d'un adversaire…" : myTurn ? "C'est ton tour" : `Tour de ${opp.name}`;
+  renderMultiQuestions(myTurn);
+  renderMultiLog();
+  document.getElementById('multiGuessBtn').disabled = !myTurn;
+  multiGuessSelect.disabled = !myTurn;
+}
+function renderMultiQuestions(myTurn){
+  multiQgrid.innerHTML = '';
+  multiQuestions.forEach((q, idx)=>{
+    const b = document.createElement('button');
+    b.className = 'qbtn';
+    b.textContent = q.text;
+    b.disabled = !myTurn || multiAskedIdx.has(idx);
+    b.addEventListener('click', ()=>askMultiQuestion(idx, q));
+    multiQgrid.appendChild(b);
+  });
+}
+function renderMultiLog(){
+  const entries = roomData.log ? Object.values(roomData.log) : [];
+  multiLog.innerHTML = entries.slice().reverse().map(e=>`<div class="log-item">${e.text}</div>`).join('');
+}
+function askMultiQuestion(idx, q){
+  if(roomData.turn !== myRole) return;
+  multiAskedIdx.add(idx);
+  const oppRole = myRole === 'p1' ? 'p2' : 'p1';
+  const oppSecret = PLAYERS.find(p=>p.id===roomData.players[oppRole].secretId);
+  const answer = q.test(oppSecret);
+  multiAnswerbox.innerHTML = `<span class="badge ${answer?'oui':'non'}">${answer?'Oui':'Non'}</span><span>${q.text}</span>`;
+  const logRef = fbDb.ref(MULTI_ROOM_PREFIX + myRoomCode + '/log').push();
+  logRef.set({ text: `${myName} a demandé « ${q.text} » — ${answer?'Oui':'Non'}` });
+  fbDb.ref(MULTI_ROOM_PREFIX + myRoomCode + '/turn').set(oppRole);
+}
+
+bindTap(document.getElementById('multiGuessBtn'), ()=>{
+  if(!roomData || roomData.turn !== myRole) return;
+  const val = multiGuessSelect.value;
+  if(!val) return;
+  const oppRole = myRole === 'p1' ? 'p2' : 'p1';
+  const oppSecretId = roomData.players[oppRole].secretId;
+  const guessedPlayer = PLAYERS.find(p=>p.id===Number(val));
+  const win = Number(val) === oppSecretId;
+  const logRef = fbDb.ref(MULTI_ROOM_PREFIX + myRoomCode + '/log').push();
+  if(win){
+    logRef.set({ text: `${myName} a deviné correctement : ${guessedPlayer.name} ! 🏆` });
+    fbDb.ref(MULTI_ROOM_PREFIX + myRoomCode).update({ status:'finished', winner: myRole });
+    addCoins(20);
+  } else {
+    logRef.set({ text: `${myName} a proposé ${guessedPlayer.name} — incorrect.` });
+    fbDb.ref(MULTI_ROOM_PREFIX + myRoomCode + '/turn').set(oppRole);
+    addCoins(2);
+  }
+});
+
+document.getElementById('multiLeaveBtn').addEventListener('click', leaveMultiRoom);
+document.getElementById('multiLogToggle').addEventListener('click', ()=>{
+  const open = multiLog.classList.toggle('open');
+  document.getElementById('multiLogToggle').textContent = open ? "Masquer l'historique ▴" : "Voir l'historique ▾";
+});
+function leaveMultiRoom(){
+  if(roomRef) roomRef.off();
+  roomRef = null; roomData = null; myRole = null; myRoomCode = null;
+  multiLobbyError.style.display = 'none';
+  multiJoinCode.value = '';
+  showLobbyView('lobby');
+}
+
+async function init(){
+  await loadRemoteContent();
+  newGame();
+}
+init();
+</script>
+</body>
+</html>
