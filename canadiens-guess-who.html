@@ -918,6 +918,7 @@ const OTHER_TEAMS = [
 ];
 
 const SOLO_PLAYERS = [...PLAYERS, ...OTHER_TEAMS];
+const DUEL_PLAYERS = SOLO_PLAYERS;
 
 // Contenu à distance (optionnel) : pointe CONTENT_URL vers un fichier JSON hébergé
 // (GitHub raw, Firebase, etc.) pour ajouter des joueurs/questions sans republier l'app.
@@ -975,7 +976,7 @@ const QUESTION_POOL = [
   {text:"Joue-t-il toujours activement pour le CH aujourd'hui?", test:p=>p.active},
   {text:"Son numéro a-t-il été retiré par l'organisation?", test:p=>p.numberRetired},
   {text:"Est-il membre du Temple de la renommée du hockey?", test:p=>p.hallOfFame},
-  {text:"A-t-il remporté au moins une Coupe Stanley avec le CH?", test:p=>p.stanleyCup},
+  {text:"A-t-il remporté au moins une Coupe Stanley?", test:p=>p.stanleyCup},
   {text:"A-t-il joué dans la LNH avant 1980?", test:p=>p.before1980}
 ];
 let QUESTIONS = [];
@@ -1116,7 +1117,7 @@ function mascotSVG(p){
 function renderRoster(){
   gridEl.innerHTML = '';
   guessSelect.innerHTML = '<option value="">Faire une supposition…</option>';
-  PLAYERS.forEach(p=>{
+  DUEL_PLAYERS.forEach(p=>{
     const card = document.createElement('div');
     card.className = 'card' + (eliminated.has(p.id)?' eliminated':'') + (selectedId===p.id?' selected':'');
     card.innerHTML = `
@@ -1144,7 +1145,7 @@ function renderRoster(){
       guessSelect.appendChild(opt);
     }
   });
-  remCount.textContent = PLAYERS.length - eliminated.size;
+  remCount.textContent = DUEL_PLAYERS.length - eliminated.size;
 }
 
 function toggleEliminate(id){
@@ -1177,7 +1178,7 @@ function askQuestion(idx){
   logEl.prepend(item);
   qCount.textContent = askedIdx.size;
 
-  PLAYERS.forEach(p=>{
+  DUEL_PLAYERS.forEach(p=>{
     if(q.test(p) !== answer) eliminated.add(p.id);
   });
 
@@ -1219,7 +1220,7 @@ bindTap(document.getElementById('guessBtn'), ()=>{
     answerbox.innerHTML = `<span style="color:#F5C6CB;">Choisis d'abord un joueur dans la liste déroulante.</span>`;
     return;
   }
-  const guess = PLAYERS.find(p=>p.id===Number(val));
+  const guess = DUEL_PLAYERS.find(p=>p.id===Number(val));
   const win = guess.id === secret.id;
   addCoins(win ? 12 : 3);
   updateHintButton();
@@ -1251,7 +1252,7 @@ document.getElementById('playAgainBtn').addEventListener('click', ()=>{
 document.getElementById('newGameBtn').addEventListener('click', newGame);
 
 function newGame(){
-  secret = PLAYERS[Math.floor(Math.random()*PLAYERS.length)];
+  secret = DUEL_PLAYERS[Math.floor(Math.random()*DUEL_PLAYERS.length)];
   QUESTIONS = shuffle(QUESTION_POOL).slice(0, 12);
   eliminated = new Set();
   selectedId = null;
