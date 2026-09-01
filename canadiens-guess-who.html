@@ -425,6 +425,38 @@
     margin:12px 0 0;
   }
 
+  .levelcard{
+    background:var(--bleu);
+    border-radius:14px;
+    padding:16px;
+    cursor:pointer;
+  }
+  .levelcard.locked{
+    opacity:.5;
+    cursor:default;
+  }
+  .levelcard-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:6px;
+  }
+  .levelname{font-weight:800;font-size:15px;color:var(--glace);}
+  .levellock{font-size:14px;}
+  .levelprogtext{font-size:12px;color:var(--texte-att);margin-bottom:8px;}
+  .levelbar{
+    height:8px;
+    background:var(--acier);
+    border-radius:999px;
+    overflow:hidden;
+  }
+  .levelbarfill{
+    height:100%;
+    background:linear-gradient(90deg, var(--or), #F0C878);
+    border-radius:999px;
+    transition:width .3s ease;
+  }
+
   /* ---------- Solo silhouette ---------- */
   .silhouettewrap{padding:20px 16px 0;}
   .imgtoggle{
@@ -615,7 +647,8 @@
 
   <div class="tabs">
     <button class="tabbtn active" id="tabDuel">Face à face</button>
-    <button class="tabbtn" id="tabSolo">Solo — Silhouette</button>
+    <button class="tabbtn" id="tabSolo">Solo</button>
+    <button class="tabbtn" id="tabLevels">Niveaux</button>
     <button class="tabbtn" id="tabMulti">En ligne</button>
   </div>
 
@@ -708,6 +741,68 @@
 
       <div id="soloGuesses" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;"></div>
     </section>
+  </div>
+
+  <div id="levelsMode" style="display:none;">
+    <div id="levelsListView">
+      <div class="rostertitle" style="margin-top:22px;">
+        <h2>Choisis un niveau</h2>
+        <span>La difficulté augmente à chaque niveau</span>
+      </div>
+      <div id="levelsList" style="padding:0 16px;display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+
+    <div id="levelsPlayView" style="display:none;">
+      <div class="statusbar">
+        <div class="pill" id="lvlProgressPill">Niveau 1 — 0/10</div>
+        <button class="btn btn-ghost" id="lvlBackBtn">← Niveaux</button>
+      </div>
+
+      <div class="silhouettewrap">
+        <div class="silhouettecard" id="lvlCard">
+          <img id="lvlPhoto" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:filter .5s ease;">
+          <span class="era" id="lvlEra">Actif</span>
+          <span class="continent-badge" id="lvlContinent">Amérique du Nord</span>
+          <div class="silhouettenum" id="lvlNum">00</div>
+          <div class="silhouettepos" id="lvlPos">Attaquant</div>
+        </div>
+        <div class="scramblewrap">
+          <div class="letterboxes" id="lvlBoxes"></div>
+          <div class="letterpool" id="lvlPool"></div>
+        </div>
+        <p class="sub" style="text-align:center;margin:8px 0 0;" id="lvlDecoyNote"></p>
+      </div>
+
+      <div class="statusbar" style="padding-top:14px;">
+        <div class="pill">Essais restants&nbsp;<b id="lvlTries">9</b></div>
+      </div>
+
+      <section class="panel">
+        <h2>Propose un nom</h2>
+        <div style="display:flex;gap:8px;">
+          <input id="lvlInput" placeholder="Nom du joueur…" autocomplete="off"
+            style="flex:1;background:var(--acier);color:var(--texte);border:1px solid #333C54;border-radius:8px;padding:10px 12px;font-size:14px;">
+          <button class="btn btn-primary" id="lvlGuessBtn">Deviner</button>
+        </div>
+        <p id="lvlGuessError" style="display:none;color:#F5C6CB;font-size:12.5px;margin:8px 0 0;"></p>
+
+        <div class="hintrow">
+          <span style="font-size:12.5px;color:#9FA9C4;" id="lvlHintCounter">3 indices restants</span>
+          <button class="btn btn-primary" id="lvlHintBtn" style="background:var(--or);color:#2a2107;">Obtenir un indice</button>
+        </div>
+        <div class="answerbox" id="lvlHintBox" style="display:none;"></div>
+
+        <div id="lvlGuesses" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;"></div>
+      </section>
+    </div>
+
+    <div id="levelsCompleteView" style="display:none;">
+      <section class="panel" style="text-align:center;margin-top:22px;">
+        <h2>Niveau terminé! 🎉</h2>
+        <p class="sub" id="lvlCompleteText">Tu as trouvé tout le monde dans ce niveau.</p>
+        <button class="btn btn-primary" id="lvlContinueBtn" style="width:100%;margin-top:8px;">Continuer</button>
+      </section>
+    </div>
   </div>
 
   <div id="multiMode" style="display:none;">
@@ -1019,7 +1114,7 @@ let hintsLeft = 3;
 
 /* ---------- Coin economy (saved on this device) ---------- */
 const HINT_COST = 5;
-const COIN_STORAGE_KEY = 'chGuessWhoCoins';
+const COIN_STORAGE_KEY = 'quiEstCeCoinsGlobal';
 
 function loadSavedCoins(){
   try{
@@ -1091,9 +1186,15 @@ function seedFrom(id, salt){
 
 // A small original hockey-player silhouette icon — purely decorative, not a
 // likeness of anyone real. Jersey colored by position; goalies get a mask cage.
+const MASCOT_SKIN = ['#F2C29B','#E0A978','#C68F5B','#8D5524','#FBD8B4'];
+const MASCOT_HAIR = ['#2B1B0E','#4A2E1A','#8B5A2B','#C9A961','#1A1A1A','#6B4226'];
+
 function mascotSVG(p){
   const color = JERSEY_COLORS[p.pos] || '#AF1E2D';
   const dark = JERSEY_DARK[p.pos] || '#7E1522';
+  const skin = MASCOT_SKIN[Math.floor(seedFrom(p.id, 4) * MASCOT_SKIN.length)];
+  const hair = MASCOT_HAIR[Math.floor(seedFrom(p.id, 5) * MASCOT_HAIR.length)];
+  const bald = seedFrom(p.id, 6) > 0.82;
   const leanRight = seedFrom(p.id, 1) > 0.5;
   const cage = p.pos === 'G';
   const flip = leanRight ? '' : `transform="scale(-1,1) translate(-40,0)"`;
@@ -1105,8 +1206,10 @@ function mascotSVG(p){
       <polygon points="14,25 26,25 24.5,35 15.5,35" fill="${color}"/>
       <path d="M13 13 Q20 9 27 13 L26 26 L14 26 Z" fill="${color}"/>
       <line x1="14.5" y1="18" x2="9" y2="21" stroke="${color}" stroke-width="3" stroke-linecap="round"/>
+      ${bald ? '' : `<path d="M15.5 6.3 Q20 3 24.5 6.3" stroke="${hair}" stroke-width="2.1" fill="none" stroke-linecap="round"/>`}
       <circle cx="20" cy="8.5" r="4.2" fill="${color}"/>
       <circle cx="20" cy="8.5" r="4.2" fill="none" stroke="${dark}" stroke-width="0.6"/>
+      <circle cx="20" cy="11.4" r="1.7" fill="${skin}"/>
       ${cage ? `<line x1="17.3" y1="7" x2="17.3" y2="11.5" stroke="#EDF1F5" stroke-width="0.6"/>
       <line x1="20" y1="6.3" x2="20" y2="12" stroke="#EDF1F5" stroke-width="0.6"/>
       <line x1="22.7" y1="7" x2="22.7" y2="11.5" stroke="#EDF1F5" stroke-width="0.6"/>` : ''}
@@ -1270,26 +1373,32 @@ function newGame(){
 /* ---------- Mode tabs ---------- */
 const tabDuel = document.getElementById('tabDuel');
 const tabSolo = document.getElementById('tabSolo');
+const tabLevels = document.getElementById('tabLevels');
 const tabMulti = document.getElementById('tabMulti');
 const duelMode = document.getElementById('duelMode');
 const soloModeEl = document.getElementById('soloMode');
+const levelsModeEl = document.getElementById('levelsMode');
 const multiModeEl = document.getElementById('multiMode');
 const duelGuessbar = document.getElementById('duelGuessbar');
 
 tabDuel.addEventListener('click', ()=>switchTab('duel'));
 tabSolo.addEventListener('click', ()=>switchTab('solo'));
+tabLevels.addEventListener('click', ()=>switchTab('levels'));
 tabMulti.addEventListener('click', ()=>switchTab('multi'));
 
 function switchTab(mode){
   tabDuel.classList.toggle('active', mode==='duel');
   tabSolo.classList.toggle('active', mode==='solo');
+  tabLevels.classList.toggle('active', mode==='levels');
   tabMulti.classList.toggle('active', mode==='multi');
   duelMode.style.display = mode==='duel' ? '' : 'none';
   soloModeEl.style.display = mode==='solo' ? '' : 'none';
+  levelsModeEl.style.display = mode==='levels' ? '' : 'none';
   multiModeEl.style.display = mode==='multi' ? '' : 'none';
   duelGuessbar.style.display = mode==='duel' ? '' : 'none';
   if(mode==='solo' && !soloSecret) newSoloGame();
   if(mode==='multi') initMultiTab();
+  if(mode==='levels') renderLevelsList();
 }
 
 /* ---------- Solo mode: silhouette + guesses ---------- */
@@ -1869,6 +1978,347 @@ function leaveMultiRoom(){
   multiJoinCode.value = '';
   showLobbyView('lobby');
 }
+
+/* ---------- Levels mode: progressive difficulty, unlock by completing ---------- */
+const LEVELS_CONFIG = [
+  {tries:9, blurStart:6,  blurStep:1.5, hints:3, decoys:0},
+  {tries:7, blurStart:10, blurStep:2,   hints:2, decoys:2},
+  {tries:6, blurStart:14, blurStep:2.5, hints:2, decoys:4},
+  {tries:5, blurStart:18, blurStep:3,   hints:1, decoys:6},
+  {tries:4, blurStart:22, blurStep:4,   hints:1, decoys:8}
+];
+function buildLevels(){
+  const sizes = [10,17,10,10,10];
+  const out = [];
+  let idx = 0;
+  sizes.forEach((sz,i)=>{
+    out.push({ name:`Niveau ${i+1}`, players: DUEL_PLAYERS.slice(idx, idx+sz), cfg: LEVELS_CONFIG[i] });
+    idx += sz;
+  });
+  return out;
+}
+const LEVELS = buildLevels();
+
+const LEVELS_STORAGE_KEY = 'quiEstCeLevelsHockey';
+function loadLevelProgress(){
+  try{
+    const raw = localStorage.getItem(LEVELS_STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(Array.isArray(parsed)) return parsed;
+    }
+  }catch(e){}
+  return [];
+}
+let levelProgress = loadLevelProgress();
+while(levelProgress.length < LEVELS.length) levelProgress.push({completed:[]});
+function saveLevelProgress(){
+  try{ localStorage.setItem(LEVELS_STORAGE_KEY, JSON.stringify(levelProgress)); }catch(e){}
+}
+
+function isLevelUnlocked(i){
+  if(i===0) return true;
+  return levelProgress[i-1].completed.length >= LEVELS[i-1].players.length;
+}
+
+const levelsListEl = document.getElementById('levelsList');
+const levelsListView = document.getElementById('levelsListView');
+const levelsPlayView = document.getElementById('levelsPlayView');
+const levelsCompleteView = document.getElementById('levelsCompleteView');
+const lvlProgressPill = document.getElementById('lvlProgressPill');
+const lvlCardEl = document.getElementById('lvlCard');
+const lvlEraEl = document.getElementById('lvlEra');
+const lvlContinentEl = document.getElementById('lvlContinent');
+const lvlNumEl = document.getElementById('lvlNum');
+const lvlPhotoEl = document.getElementById('lvlPhoto');
+const lvlPosEl = document.getElementById('lvlPos');
+const lvlTriesEl = document.getElementById('lvlTries');
+const lvlInput = document.getElementById('lvlInput');
+const lvlGuessError = document.getElementById('lvlGuessError');
+const lvlGuessesEl = document.getElementById('lvlGuesses');
+const lvlHintBtn = document.getElementById('lvlHintBtn');
+const lvlHintCounter = document.getElementById('lvlHintCounter');
+const lvlHintBox = document.getElementById('lvlHintBox');
+const lvlBoxesEl = document.getElementById('lvlBoxes');
+const lvlPoolEl = document.getElementById('lvlPool');
+const lvlDecoyNote = document.getElementById('lvlDecoyNote');
+
+let lvlPoolItems = [];
+let lvlBoxFill = [];
+let lvlPoolUsed = [];
+let lvlWordLengths = [];
+
+function buildLevelLetterPuzzle(){
+  const cfg = LEVELS[currentLevelIndex].cfg;
+  const words = lvlSecret.name.split(' ');
+  lvlWordLengths = words.map(w=>w.length);
+  const realLetters = [];
+  words.forEach(w=> w.split('').forEach(ch=> realLetters.push(ch)));
+
+  const decoyCount = cfg.decoys || 0;
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const decoys = [];
+  for(let i=0;i<decoyCount;i++) decoys.push(alphabet[Math.floor(Math.random()*alphabet.length)]);
+
+  lvlPoolItems = shuffle([
+    ...realLetters.map(ch=>({ch})),
+    ...decoys.map(ch=>({ch}))
+  ]);
+  lvlPoolUsed = new Array(lvlPoolItems.length).fill(false);
+  lvlBoxFill = new Array(realLetters.length).fill(null);
+
+  lvlDecoyNote.textContent = decoyCount > 0
+    ? `${decoyCount} lettre${decoyCount!==1?'s':''} intruse${decoyCount!==1?'s':''} dans le tas — attention!`
+    : '';
+
+  drawLevelBoxes();
+  drawLevelPool();
+}
+
+function drawLevelBoxes(){
+  let idx = 0;
+  let html = '';
+  lvlWordLengths.forEach(len=>{
+    html += '<div class="wordgroup">';
+    for(let i=0;i<len;i++){
+      const poolIdx = lvlBoxFill[idx];
+      const ch = poolIdx!==null ? lvlPoolItems[poolIdx].ch : '';
+      html += `<div class="letterbox ${poolIdx!==null?'filled':''}" data-slot="${idx}">${ch}</div>`;
+      idx++;
+    }
+    html += '</div>';
+  });
+  lvlBoxesEl.innerHTML = html;
+  lvlBoxesEl.querySelectorAll('.letterbox.filled').forEach(el=>{
+    el.addEventListener('click', ()=> clearLevelSlot(Number(el.dataset.slot)));
+  });
+}
+
+function drawLevelPool(){
+  lvlPoolEl.innerHTML = lvlPoolItems.map((item,pi)=>{
+    const used = lvlPoolUsed[pi];
+    return `<div class="lettertile ${used?'used':''}" data-tile="${pi}">${item.ch.toUpperCase()}</div>`;
+  }).join('');
+  lvlPoolEl.querySelectorAll('.lettertile:not(.used)').forEach(el=>{
+    el.addEventListener('click', ()=> placeLevelTile(Number(el.dataset.tile)));
+  });
+}
+
+function placeLevelTile(poolIdx){
+  const slot = lvlBoxFill.findIndex(v=>v===null);
+  if(slot===-1) return;
+  lvlBoxFill[slot] = poolIdx;
+  lvlPoolUsed[poolIdx] = true;
+  drawLevelBoxes();
+  drawLevelPool();
+  maybeSyncLevelInput();
+}
+
+function clearLevelSlot(slot){
+  const poolIdx = lvlBoxFill[slot];
+  if(poolIdx===null) return;
+  lvlBoxFill[slot] = null;
+  lvlPoolUsed[poolIdx] = false;
+  drawLevelBoxes();
+  drawLevelPool();
+}
+
+function maybeSyncLevelInput(){
+  if(lvlBoxFill.some(v=>v===null)) return;
+  let idx = 0;
+  const assembled = lvlWordLengths.map(len=>{
+    let out = '';
+    for(let i=0;i<len;i++){ out += lvlPoolItems[lvlBoxFill[idx]].ch; idx++; }
+    return out;
+  }).join(' ');
+  lvlInput.value = assembled;
+}
+
+let currentLevelIndex = 0;
+let lvlSecret = null;
+let lvlTriesLeft = 0;
+let lvlHintsLeft = 0;
+
+function renderLevelsList(){
+  levelsListView.style.display = '';
+  levelsPlayView.style.display = 'none';
+  levelsCompleteView.style.display = 'none';
+  levelsListEl.innerHTML = LEVELS.map((lvl,i)=>{
+    const prog = levelProgress[i];
+    const unlocked = isLevelUnlocked(i);
+    const total = lvl.players.length;
+    const done = Math.min(prog.completed.length, total);
+    return `<div class="levelcard ${unlocked?'':'locked'}" data-idx="${i}">
+      <div class="levelcard-top">
+        <span class="levelname">${lvl.name}</span>
+        ${unlocked?'':'<span class="levellock">🔒</span>'}
+      </div>
+      <div class="levelprogtext">${done}/${total} trouvés</div>
+      <div class="levelbar"><div class="levelbarfill" style="width:${total?(done/total*100):0}%"></div></div>
+    </div>`;
+  }).join('');
+  levelsListEl.querySelectorAll('.levelcard:not(.locked)').forEach(el=>{
+    bindTap(el, ()=> openLevel(Number(el.dataset.idx)));
+  });
+}
+
+function openLevel(i){
+  currentLevelIndex = i;
+  levelsListView.style.display = 'none';
+  levelsCompleteView.style.display = 'none';
+  levelsPlayView.style.display = '';
+  pickNextLevelPlayer();
+}
+
+document.getElementById('lvlBackBtn').addEventListener('click', renderLevelsList);
+
+function pickNextLevelPlayer(){
+  const lvl = LEVELS[currentLevelIndex];
+  const prog = levelProgress[currentLevelIndex];
+  const remaining = lvl.players.filter(p=>!prog.completed.includes(p.id));
+  if(remaining.length === 0){ finishLevel(); return; }
+
+  lvlSecret = remaining[Math.floor(Math.random()*remaining.length)];
+  const cfg = lvl.cfg;
+  lvlTriesLeft = cfg.tries;
+  lvlHintsLeft = cfg.hints;
+  lvlTriesEl.textContent = lvlTriesLeft;
+  lvlProgressPill.textContent = `${lvl.name} — ${prog.completed.length}/${lvl.players.length}`;
+
+  if(lvlSecret.photo){
+    lvlPhotoEl.onerror = function(){
+      lvlPhotoEl.style.display = 'none';
+      lvlNumEl.style.display = '';
+      lvlNumEl.textContent = lvlSecret.num;
+      lvlNumEl.style.filter = `blur(${cfg.blurStart}px)`;
+    };
+    lvlPhotoEl.src = lvlSecret.photo;
+    lvlPhotoEl.style.display = 'block';
+    lvlPhotoEl.style.filter = `blur(${cfg.blurStart}px)`;
+    lvlNumEl.style.display = 'none';
+  } else {
+    lvlPhotoEl.style.display = 'none';
+    lvlNumEl.style.display = '';
+    lvlNumEl.textContent = lvlSecret.num;
+    lvlNumEl.style.filter = `blur(${cfg.blurStart}px)`;
+  }
+  lvlCardEl.className = 'silhouettecard';
+  lvlEraEl.textContent = lvlSecret.active ? 'Actif' : 'Légende';
+  lvlEraEl.className = 'era ' + (lvlSecret.active ? 'actif' : 'legende');
+  lvlContinentEl.textContent = lvlSecret.continent;
+  lvlPosEl.textContent = lvlSecret.posLabel;
+  buildLevelLetterPuzzle();
+
+  lvlInput.value = '';
+  lvlGuessesEl.innerHTML = '';
+  lvlGuessError.style.display = 'none';
+  updateLevelHintButton();
+  lvlHintBox.style.display = 'none';
+}
+
+function updateLevelBlur(){
+  const cfg = LEVELS[currentLevelIndex].cfg;
+  const used = cfg.tries - lvlTriesLeft;
+  const blurPx = Math.max(0, cfg.blurStart - used * cfg.blurStep);
+  if(lvlSecret.photo && lvlPhotoEl.style.display !== 'none'){
+    lvlPhotoEl.style.filter = `blur(${blurPx}px)`;
+  } else {
+    lvlNumEl.style.filter = `blur(${blurPx}px)`;
+  }
+}
+
+function updateLevelHintButton(){
+  if(lvlHintsLeft > 0){
+    lvlHintBtn.textContent = 'Obtenir un indice';
+    lvlHintBtn.disabled = false;
+    lvlHintCounter.textContent = `${lvlHintsLeft} indice${lvlHintsLeft!==1?'s':''} restant${lvlHintsLeft!==1?'s':''}`;
+  } else {
+    lvlHintBtn.textContent = `Acheter un indice (${HINT_COST} pièces)`;
+    lvlHintBtn.disabled = coinBalance < HINT_COST;
+    lvlHintCounter.textContent = 'Indices gratuits épuisés';
+  }
+}
+bindTap(lvlHintBtn, ()=>{
+  if(lvlHintsLeft > 0){ lvlHintsLeft--; } else { if(!spendCoins(HINT_COST)) return; }
+  const hintFn = HINTS[Math.floor(Math.random()*HINTS.length)];
+  lvlHintBox.style.display = 'flex';
+  lvlHintBox.innerHTML = `<span class="badge" style="background:var(--or);color:#2a2107;">Indice</span><span>${hintFn(lvlSecret)}</span>`;
+  updateLevelHintButton();
+});
+
+function lvlGuess(){
+  const raw = lvlInput.value.trim();
+  lvlGuessError.style.display = 'none';
+  if(lvlTriesLeft<=0) return;
+  if(!raw){
+    lvlGuessError.textContent = 'Écris un nom avant de deviner.';
+    lvlGuessError.style.display = 'block';
+    return;
+  }
+  const found = DUEL_PLAYERS.find(p=>p.name.toLowerCase() === raw.toLowerCase());
+  if(!found){
+    lvlGuessError.textContent = `« ${raw} » ne correspond à aucun joueur.`;
+    lvlGuessError.style.display = 'block';
+    return;
+  }
+  lvlInput.value = '';
+
+  const win = found.id === lvlSecret.id;
+  const row = document.createElement('div');
+  row.className = 'guesscard';
+  const posHit = found.pos === lvlSecret.pos;
+  const countryHit = found.country === lvlSecret.country;
+  const teamHit = found.team === lvlSecret.team;
+  const born = arrowCompare(found.birthYear, lvlSecret.birthYear);
+  row.innerHTML = `
+    <div class="guesscard-head">
+      <div class="avatar">${avatarInner(found)}</div>
+      <span class="guesscard-name">${found.name}</span>
+      ${win ? '<span class="wintag">✓ Trouvé</span>' : ''}
+    </div>
+    <div class="statrow">
+      <div class="stattile ${posHit?'hit':'miss'}"><b>POSITION</b><span>${found.posLabel}</span></div>
+      <div class="stattile ${countryHit?'hit':'miss'}"><b>PAYS</b><span>${found.country}</span></div>
+      <div class="stattile ${born.hit?'hit':'miss'}"><b>NÉ EN</b><span>${found.birthYear}${born.sym}</span></div>
+    </div>
+    <div class="statrow">
+      <div class="stattile ${teamHit?'hit':'miss'}"><b>ÉQUIPE</b><span>${found.team}</span></div>
+    </div>`;
+  lvlGuessesEl.prepend(row);
+
+  if(win){
+    lvlNumEl.style.filter = 'blur(0px)'; lvlPhotoEl.style.filter = 'blur(0px)';
+    addCoins(8 + lvlTriesLeft);
+    const prog = levelProgress[currentLevelIndex];
+    if(!prog.completed.includes(found.id)) prog.completed.push(found.id);
+    saveLevelProgress();
+    setTimeout(pickNextLevelPlayer, 900);
+    return;
+  }
+
+  lvlTriesLeft--;
+  lvlTriesEl.textContent = lvlTriesLeft;
+  updateLevelBlur();
+  if(lvlTriesLeft<=0){
+    lvlNumEl.style.filter = 'blur(0px)'; lvlPhotoEl.style.filter = 'blur(0px)';
+    lvlGuessError.textContent = `Plus d'essais — c'était ${lvlSecret.name}. On continue avec quelqu'un d'autre.`;
+    lvlGuessError.style.display = 'block';
+    setTimeout(pickNextLevelPlayer, 1400);
+  }
+}
+bindTap(document.getElementById('lvlGuessBtn'), lvlGuess);
+lvlInput.addEventListener('keydown', e=>{ if(e.key==='Enter') lvlGuess(); });
+
+function finishLevel(){
+  levelsPlayView.style.display = 'none';
+  levelsCompleteView.style.display = '';
+  const justUnlocked = currentLevelIndex+1 < LEVELS.length;
+  addCoins(25);
+  document.getElementById('lvlCompleteText').textContent = justUnlocked
+    ? `Tu as trouvé tout le monde dans ${LEVELS[currentLevelIndex].name} — ${LEVELS[currentLevelIndex+1].name} est débloqué! +25 pièces`
+    : `Tu as trouvé tout le monde dans ${LEVELS[currentLevelIndex].name} — c'était le dernier niveau! +25 pièces`;
+}
+document.getElementById('lvlContinueBtn').addEventListener('click', renderLevelsList);
 
 async function init(){
   await loadRemoteContent();
