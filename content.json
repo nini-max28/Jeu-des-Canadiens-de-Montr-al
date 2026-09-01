@@ -213,7 +213,7 @@
     {
       "id": 306,
       "name": "Wayne Gretzky",
-      "photo": ""
+      "photo": "https://www.hockeydb.com/ihdb/photos/bobby-orr-1977-35.jpg"
     },
     {
       "id": 307,
@@ -223,12 +223,12 @@
     {
       "id": 308,
       "name": "Bobby Orr",
-      "photo": ""
+      "photo": "https://www.hockeydb.com/ihdb/photos/bobby-orr-1977-35.jpg"
     },
     {
       "id": 309,
       "name": "Gordie Howe",
-      "photo": ""
+      "photo": "https://www.hockeydb.com/ihdb/photos/gordie-howe-1970-34.jpg"
     },
     {
       "id": 310,
@@ -243,17 +243,17 @@
     {
       "id": 312,
       "name": "Steven Stamkos",
-      "photo": ""
+      "photo": "https://www.hockeydb.com/ihdb/photos/steven-stamkos-2026-1412.jpg"
     },
     {
       "id": 313,
       "name": "Nikita Kucherov",
-      "photo": ""
+      "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8476453.webp&w=1920&q=75"
     },
     {
       "id": 314,
       "name": "Cale Makar",
-      "photo": ""
+      "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8480069.webp&w=1920&q=75"
     },
     {
       "id": 315,
@@ -268,7 +268,7 @@
     {
       "id": 317,
       "name": "Erik Karlsson",
-      "photo": ""
+      "photo": "https://www.nhlpa.com/_next/image/?url=https%3A%2F%2Fcdn.nhlpa.com%2Fplayers%2Fheadshots%2Fclassic%2Fnid%2F450%2F8474578.webp&w=1920&q=75"
     },
     {
       "id": 318,
