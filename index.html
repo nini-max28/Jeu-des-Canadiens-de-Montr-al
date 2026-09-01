@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Qui est-ce — Accueil</title>
+<style>
+  :root{
+    --or: #D9A441;
+    --glace: #EDF1F5;
+    --acier: #14121C;
+    --acier-clair: #201C2E;
+    --texte-att: #9993B3;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(217,164,65,0.14), transparent 60%),
+      var(--acier);
+    color:var(--glace);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:0 0 60px;}
+
+  header{padding:32px 20px 20px;text-align:center;}
+  h1{
+    font-family:"Arial Narrow",Arial,sans-serif;
+    font-weight:900;font-stretch:condensed;font-size:42px;line-height:0.95;
+    margin:0;letter-spacing:0.5px;text-transform:uppercase;
+    text-shadow:0 2px 0 rgba(0,0,0,0.25);
+  }
+  h1 span{color:var(--or);}
+  p.eyebrow{font-size:13px;color:var(--texte-att);margin:10px 0 0;}
+
+  .coinbar{display:flex;justify-content:center;padding:16px 20px 0;}
+  .coinpill{
+    background:linear-gradient(90deg, rgba(217,164,65,0.18), rgba(217,164,65,0.05));
+    border:1px solid rgba(217,164,65,0.35);
+    border-radius:999px;
+    padding:9px 18px;
+    font-size:15px;
+    color:var(--texte-att);
+  }
+  .coinpill b{color:var(--or);font-size:17px;}
+
+  .themes{padding:22px 16px 0;display:flex;flex-direction:column;gap:14px;}
+  .theme-card{
+    display:block;
+    text-decoration:none;
+    color:inherit;
+    border-radius:18px;
+    padding:20px;
+    position:relative;
+    overflow:hidden;
+    min-height:96px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+  .theme-card.hockey{background:linear-gradient(135deg, #AF1E2D, #5E1220);}
+  .theme-card.singers{background:linear-gradient(135deg, #8B2FC9, #3A1360);}
+  .theme-card.locked{background:var(--acier-clair);opacity:0.65;}
+  .theme-icon{
+    width:56px;height:56px;
+    border-radius:14px;
+    background:rgba(255,255,255,0.14);
+    display:flex;align-items:center;justify-content:center;
+    font-size:26px;
+    flex-shrink:0;
+  }
+  .theme-info h2{margin:0 0 4px;font-size:19px;font-weight:800;}
+  .theme-info p{margin:0;font-size:12.5px;color:rgba(255,255,255,0.8);}
+  .theme-card.locked .theme-info p{color:var(--texte-att);}
+  .lock-badge{
+    position:absolute;
+    top:14px;right:14px;
+    font-size:11px;
+    font-weight:700;
+    background:rgba(0,0,0,0.35);
+    padding:4px 10px;
+    border-radius:999px;
+  }
+
+  footer{padding:30px 20px 0;text-align:center;font-size:12px;color:var(--texte-att);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Devine qui c'est — sur tous les thèmes</p>
+    <h1>Qui est<span>-ce</span></h1>
+  </header>
+
+  <div class="coinbar">
+    <div class="coinpill">Pièces&nbsp;<b id="coinCount">20</b></div>
+  </div>
+
+  <div class="themes">
+    <a class="theme-card hockey" href="canadiens-guess-who.html">
+      <div class="theme-icon">🏒</div>
+      <div class="theme-info">
+        <h2>Canadiens de Montréal</h2>
+        <p>Joueurs actuels, légendes et vedettes de la LNH</p>
+      </div>
+    </a>
+
+    <a class="theme-card singers" href="qui-est-ce-chanteurs.html">
+      <div class="theme-icon">🎤</div>
+      <div class="theme-info">
+        <h2>Chanteurs &amp; chanteuses</h2>
+        <p>Anglophones et francophones, solo et groupes</p>
+      </div>
+    </a>
+
+    <div class="theme-card locked">
+      <span class="lock-badge">🔒 Bientôt</span>
+      <div class="theme-icon">🎬</div>
+      <div class="theme-info">
+        <h2>Acteurs &amp; actrices</h2>
+        <p>En préparation</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>Les pièces sont partagées entre tous les jeux.</footer>
+</div>
+
+<script>
+const COIN_STORAGE_KEY = 'quiEstCeCoinsGlobal';
+function loadSavedCoins(){
+  try{
+    const saved = localStorage.getItem(COIN_STORAGE_KEY);
+    if(saved !== null){ const n = parseInt(saved, 10); if(!isNaN(n)) return n; }
+  }catch(e){}
+  return 20;
+}
+document.getElementById('coinCount').textContent = loadSavedCoins();
+</script>
+</body>
+</html>

@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Qui est-ce — Chanteurs</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<style>
+  :root{
+    --rouge: #8B2FC9;
+    --rouge-fonce: #5E1E8C;
+    --bleu: #1C1638;
+    --bleu-clair: #3B2A66;
+    --glace: #EDF1F5;
+    --acier: #201B33;
+    --acier-clair: #2E2748;
+    --or: #D9A441;
+    --texte: #EDF1F5;
+    --texte-att: #A79FC4;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(139,47,201,0.20), transparent 60%),
+      var(--acier);
+    color:var(--texte);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:0 0 120px;}
+
+  header{padding:28px 20px 22px;text-align:center;position:relative;}
+  .eyebrow{font-size:13px;color:var(--texte-att);letter-spacing:.02em;margin:0 0 6px;}
+  h1{
+    font-family:"Arial Narrow",Arial,sans-serif;
+    font-weight:900;font-stretch:condensed;font-size:44px;line-height:0.95;
+    margin:0;letter-spacing:0.5px;color:var(--glace);text-transform:uppercase;
+    text-shadow:0 2px 0 rgba(0,0,0,0.25);
+  }
+  h1 span{color:var(--rouge);}
+  .centerline{
+    height:3px;margin:20px auto 0;max-width:560px;
+    background:linear-gradient(90deg, transparent, var(--rouge) 15%, var(--rouge) 85%, transparent);
+    position:relative;
+  }
+  .centerline::after{
+    content:"";position:absolute;left:50%;top:50%;width:26px;height:26px;
+    transform:translate(-50%,-50%);border:3px solid var(--rouge);border-radius:50%;background:var(--acier);
+  }
+
+  .statusbar{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 0;gap:12px;}
+  .pill{background:var(--acier-clair);border-radius:999px;padding:8px 14px;font-size:14px;color:var(--texte-att);display:flex;align-items:center;gap:8px;}
+  .pill b{color:var(--glace);font-size:16px;}
+  .btn{border:none;cursor:pointer;font-weight:700;border-radius:10px;padding:10px 16px;font-size:14px;transition:transform .12s ease, opacity .12s ease;}
+  .btn:active{transform:scale(0.96);}
+  .btn-primary{background:var(--rouge);color:#fff;}
+  .btn-ghost{background:transparent;color:var(--texte-att);border:1px solid #453A66;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  section.panel{margin:22px 16px 0;background:var(--bleu);border-radius:16px;padding:18px 16px 16px;position:relative;overflow:hidden;}
+  section.panel::before{content:"";position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle, rgba(255,255,255,0.06), transparent 70%);}
+  .panel h2{margin:0 0 4px;font-size:15px;font-weight:700;color:var(--glace);}
+  .panel p.sub{margin:0 0 14px;font-size:13px;color:#C3BADD;}
+  .qgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .qbtn{text-align:left;background:var(--bleu-clair);color:var(--texte);border:none;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.25;cursor:pointer;}
+  .qbtn:disabled{opacity:.35;cursor:default;}
+  .qbtn:not(:disabled):active{transform:scale(0.98);}
+
+  .answerbox{margin-top:14px;background:var(--acier);border-radius:10px;padding:12px 14px;font-size:14px;display:flex;align-items:center;gap:10px;min-height:20px;}
+  .answerbox .badge{font-weight:800;font-size:13px;padding:3px 10px;border-radius:999px;}
+  .badge.oui{background:#1E5B3A;color:#B7F0CC;}
+  .badge.non{background:#7E1522;color:#F5C6CB;}
+
+  .log{margin-top:10px;max-height:0;overflow:hidden;transition:max-height .25s ease;}
+  .log.open{max-height:300px;overflow-y:auto;}
+  .log-item{font-size:12.5px;color:#9A8FBB;padding:6px 2px;border-top:1px solid #362A56;}
+  .log-toggle{background:none;border:none;color:#B79EE8;font-size:12.5px;cursor:pointer;margin-top:8px;padding:0;}
+
+  .hintrow{display:flex;justify-content:space-between;align-items:center;margin-top:14px;}
+
+  .rostertitle{margin:26px 16px 10px;display:flex;justify-content:space-between;align-items:baseline;}
+  .rostertitle h2{font-size:15px;margin:0;color:var(--glace);}
+  .rostertitle span{font-size:12.5px;color:var(--texte-att);}
+
+  .grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;padding:0 16px;}
+  .card{perspective:800px;height:150px;}
+  .cardface{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .4s cubic-bezier(.2,.8,.3,1);}
+  .card.eliminated .cardface{transform:rotateY(180deg);}
+  .front,.back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;cursor:pointer;user-select:none;overflow:hidden;}
+  .front{background:var(--acier-clair);border:1px solid #3A3160;}
+  .card.selected .front{border:2px solid var(--or);}
+  .back{background:repeating-linear-gradient(45deg, #171226, #171226 8px, #1D1730 8px, #1D1730 16px);transform:rotateY(180deg);display:flex;align-items:center;justify-content:center;}
+  .back span{font-size:11px;color:#5C5580;letter-spacing:.03em;}
+  .cardbg{position:absolute;inset:0;background:linear-gradient(160deg, var(--rouge), var(--rouge-fonce));display:flex;align-items:center;justify-content:center;}
+  .cardbg svg, .cardbg img{width:100%;height:100%;}
+  .cardscrim{position:absolute;left:0;right:0;bottom:0;top:38%;background:linear-gradient(180deg, transparent, rgba(10,8,20,0.9) 68%);}
+  .cardtext{position:absolute;left:10px;right:10px;bottom:9px;}
+  .avatar{width:64px;height:64px;border-radius:10px;background:linear-gradient(160deg, var(--rouge), var(--rouge-fonce));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;overflow:hidden;}
+  .cnum{position:absolute;top:8px;right:10px;font-size:16px;font-weight:900;color:#fff;background:rgba(10,8,20,0.55);padding:2px 8px;border-radius:6px;}
+  .cname{font-size:13px;font-weight:700;color:var(--glace);line-height:1.15;}
+  .cpos{font-size:11px;color:var(--texte-att);}
+  .era{position:absolute;top:8px;left:10px;font-size:9.5px;font-weight:700;letter-spacing:.02em;padding:2px 6px;border-radius:5px;}
+  .era.actif{background:rgba(30,91,58,0.35);color:#8FE0AE;}
+  .era.legende{background:rgba(217,164,65,0.25);color:var(--or);}
+
+  .guessbar{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg, transparent, var(--acier) 30%);padding:26px 16px 16px;}
+  .guessbar-inner{max-width:608px;margin:0 auto;background:var(--bleu);border-radius:14px;padding:12px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,0.35);}
+  .guessbar select{flex:1;background:var(--acier);color:var(--texte);border:1px solid #453A66;border-radius:8px;padding:10px;font-size:14px;}
+
+  .overlay{position:fixed;inset:0;background:rgba(10,8,20,0.9);display:none;align-items:center;justify-content:center;padding:24px;z-index:20;}
+  .overlay.show{display:flex;}
+  .overlaycard{background:var(--bleu);border-radius:18px;padding:26px 22px 22px;text-align:center;max-width:360px;width:100%;}
+  .overlaycard .avatar{width:88px;height:88px;font-size:24px;margin:0 auto 14px;border-radius:14px;}
+  .overlaycard h3{margin:0 0 4px;font-size:20px;color:var(--glace);}
+  .overlaycard p{margin:0 0 18px;color:#C3BADD;font-size:13.5px;}
+  .result-tag{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.03em;padding:4px 12px;border-radius:999px;margin-bottom:10px;}
+  .result-tag.win{background:#1E5B3A;color:#B7F0CC;}
+  .result-tag.lose{background:#7E1522;color:#F5C6CB;}
+
+  @media (min-width:420px){ .grid{grid-template-columns:repeat(3,1fr);} }
+
+  .tabs{display:flex;gap:8px;padding:0 16px;margin-top:6px;}
+  .tabbtn{flex:1;background:var(--acier-clair);color:var(--texte-att);border:none;border-radius:10px;padding:11px 6px;font-size:12px;font-weight:700;cursor:pointer;}
+  .tabbtn.active{background:var(--rouge);color:#fff;}
+
+  .coinbar{padding:10px 16px 0;display:flex;justify-content:center;}
+  .coinpill{background:linear-gradient(90deg, rgba(217,164,65,0.18), rgba(217,164,65,0.05));border:1px solid rgba(217,164,65,0.35);}
+  .coinpill b{color:var(--or);}
+
+  .silhouettewrap{padding:20px 16px 0;}
+  .imgtoggle{display:flex;align-items:center;gap:8px;padding:14px 16px 0;font-size:13px;color:var(--texte-att);}
+  .imgtoggle input{accent-color:var(--rouge);width:16px;height:16px;}
+
+  .silhouettecard{max-width:220px;margin:0 auto;aspect-ratio:1;border-radius:20px;background:linear-gradient(160deg, var(--rouge), var(--rouge-fonce));display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+  .silhouettecard.gen-rock{background:linear-gradient(160deg, #3B2A66, #241A44);}
+  .silhouettecard.gen-country{background:linear-gradient(160deg, #7C6A3E, #4E4227);}
+  .silhouettecard .era{top:12px;left:12px;font-size:10.5px;}
+  .continent-badge{position:absolute;top:12px;right:12px;font-size:10.5px;font-weight:700;letter-spacing:.02em;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,0.16);color:#fff;}
+  .silhouettecard::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 14px);}
+  .silhouettenum{font-size:64px;font-weight:900;color:rgba(255,255,255,0.92);font-family:"Arial Narrow",Arial,sans-serif;filter:blur(24px);transition:filter .5s ease;text-align:center;padding:0 10px;}
+  .silhouettepos{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:12px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:.02em;}
+
+  .scramblewrap{margin:16px 0 0;}
+  .letterboxes{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;}
+  .wordgroup{display:flex;gap:5px;margin:0 8px 6px 0;}
+  .letterbox{width:30px;height:36px;border:2px solid var(--or);border-radius:6px;background:rgba(217,164,65,0.08);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;color:var(--or);text-transform:uppercase;}
+  .letterbox.filled{background:rgba(217,164,65,0.22);cursor:pointer;}
+  .letterpool{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:14px;}
+  .lettertile{width:30px;height:36px;border-radius:6px;background:var(--acier-clair);color:var(--glace);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;cursor:pointer;user-select:none;}
+  .lettertile:active{transform:scale(0.94);}
+  .lettertile.used{visibility:hidden;}
+
+  .pickgrid{display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-top:12px;}
+  .picktile{background:var(--acier);border-radius:10px;padding:6px 4px 8px;text-align:center;cursor:pointer;}
+  .picktile:active{transform:scale(0.95);}
+  .picktile .avatar{width:64px;height:64px;margin:0 auto 6px;border-radius:10px;}
+  .picktile .pickname{font-size:10px;color:var(--texte-att);line-height:1.2;}
+  .picktile.tried{opacity:.35;pointer-events:none;}
+
+  .guesscard{background:var(--acier-clair);border:1px solid #3A3160;border-radius:14px;padding:14px;}
+  .guesscard-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .guesscard-head .avatar{width:52px;height:52px;font-size:13px;border-radius:10px;flex-shrink:0;}
+  .guesscard-name{font-weight:800;font-size:15px;color:var(--glace);flex:1;}
+  .wintag{font-size:11px;font-weight:800;color:#8FE0AE;background:rgba(63,191,116,0.15);padding:4px 9px;border-radius:999px;}
+  .statrow{display:flex;gap:8px;margin-bottom:8px;}
+  .statrow:last-child{margin-bottom:0;}
+  .stattile{flex:1;background:var(--acier);border-radius:10px;padding:10px 8px;text-align:center;}
+  .stattile b{display:block;font-size:9.5px;font-weight:700;letter-spacing:.05em;color:var(--texte-att);margin-bottom:4px;}
+  .stattile span{font-size:13px;font-weight:800;color:var(--glace);line-height:1.25;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .stattile.hit{background:#1E5B3A;}
+  .stattile.hit b{color:#8FE0AE;}
+  .stattile.hit span{color:#B7F0CC;}
+  .stattile.miss{background:#7E1522;}
+  .stattile.miss b{color:#F5B4BB;}
+  .stattile.miss span{color:#FBDADD;}
+
+  .roomcode{font-family:"Arial Narrow",Arial,sans-serif;font-size:48px;font-weight:900;letter-spacing:.12em;color:var(--or);margin:12px 0 0;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Une personne secrète. Des questions qui changent à chaque partie. Chanteurs et chanteuses anglophones et francophones.</p>
+    <h1>Qui est-ce<br><span>en chanson</span></h1>
+    <div class="centerline"></div>
+  </header>
+
+  <div class="tabs">
+    <button class="tabbtn active" id="tabDuel">Face à face</button>
+    <button class="tabbtn" id="tabSolo">Solo — Silhouette</button>
+    <button class="tabbtn" id="tabMulti">En ligne</button>
+  </div>
+
+  <div class="coinbar">
+    <div class="pill coinpill">Pièces&nbsp;<b id="coinCount">20</b></div>
+  </div>
+
+  <div id="duelMode">
+  <div class="statusbar">
+    <div class="pill">Restants&nbsp;<b id="remCount">20</b></div>
+    <div class="pill">Questions posées&nbsp;<b id="qCount">0</b></div>
+    <button class="btn btn-ghost" id="newGameBtn">Nouvelle partie</button>
+  </div>
+
+  <section class="panel">
+    <h2>Pose une question</h2>
+    <p class="sub">La personne secrète est choisie. Clique une question pour obtenir une réponse par oui ou non — les cartes qui ne correspondent plus s'écartent automatiquement.</p>
+    <div class="qgrid" id="qgrid"></div>
+    <div class="answerbox" id="answerbox"><span style="color:#8f83b5;">Choisis une question pour commencer.</span></div>
+    <button class="log-toggle" id="logToggle">Voir l'historique des réponses ▾</button>
+    <div class="log" id="log"></div>
+    <div class="hintrow">
+      <span style="font-size:12.5px;color:#9A8FBB;" id="hintCounter">3 indices restants</span>
+      <button class="btn btn-primary" id="hintBtn" style="background:var(--or);color:#2a2107;">Obtenir un indice</button>
+    </div>
+  </section>
+
+  <div class="rostertitle">
+    <h2>La liste</h2>
+    <span>Tape une carte pour l'écarter</span>
+  </div>
+  <div class="grid" id="grid"></div>
+  </div>
+
+  <div id="soloMode" style="display:none;">
+    <label class="imgtoggle">
+      <input type="checkbox" id="soloImgToggle" checked>
+      <span>Afficher l'image et les lettres</span>
+    </label>
+    <div class="silhouettewrap" id="silhouettewrap">
+      <div class="silhouettecard" id="soloCard">
+        <span class="era" id="soloEra">Actif</span>
+        <span class="continent-badge" id="soloContinent">Amérique du Nord</span>
+        <div class="silhouettenum" id="soloNum">??</div>
+        <div class="silhouettepos" id="soloPos">Pop</div>
+      </div>
+      <div class="scramblewrap" id="soloScrambleWrap">
+        <div class="letterboxes" id="soloBoxes"></div>
+        <div class="letterpool" id="soloPool"></div>
+      </div>
+      <p class="sub" style="text-align:center;margin:8px 0 0;">Devine la personne à partir de son genre musical flouté et de son nom mélangé.</p>
+    </div>
+
+    <div class="statusbar">
+      <div class="pill">Essais restants&nbsp;<b id="soloTries">6</b></div>
+      <button class="btn btn-ghost" id="newSoloBtn">Nouvelle partie</button>
+    </div>
+
+    <div class="tabs" style="padding:0 16px 4px;">
+      <button class="tabbtn difficulty" id="diffFacile" data-diff="facile">Facile</button>
+      <button class="tabbtn difficulty active" id="diffNormal" data-diff="normal">Normal</button>
+      <button class="tabbtn difficulty" id="diffDifficile" data-diff="difficile">Difficile</button>
+    </div>
+
+    <section class="panel">
+      <h2>Propose un nom</h2>
+      <div style="display:flex;gap:8px;">
+        <input id="soloInput" placeholder="Nom de la personne…" autocomplete="off"
+          style="flex:1;background:var(--acier);color:var(--texte);border:1px solid #453A66;border-radius:8px;padding:10px 12px;font-size:14px;">
+        <button class="btn btn-primary" id="soloGuessBtn">Deviner</button>
+      </div>
+      <p id="soloGuessError" style="display:none;color:#F5C6CB;font-size:12.5px;margin:8px 0 0;"></p>
+
+      <label class="imgtoggle" style="padding:12px 0 0;">
+        <input type="checkbox" id="soloPickToggle" checked>
+        <span>Deviner en cliquant une image (pour les petits qui n'écrivent pas encore)</span>
+      </label>
+      <div class="pickgrid" id="soloPickGrid"></div>
+
+      <div class="hintrow">
+        <span style="font-size:12.5px;color:#9A8FBB;" id="soloHintCounter">2 indices restants</span>
+        <button class="btn btn-primary" id="soloHintBtn" style="background:var(--or);color:#2a2107;">Obtenir un indice</button>
+      </div>
+      <div class="answerbox" id="soloHintBox" style="display:none;"></div>
+
+      <div id="soloGuesses" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;"></div>
+    </section>
+  </div>
+
+  <div id="multiMode" style="display:none;">
+    <div id="multiNoConfig" class="panel" style="display:none;margin:22px 16px 0;">
+      <h2>Configuration requise</h2>
+      <p class="sub">Le mode en ligne a besoin d'un projet Firebase gratuit pour synchroniser les deux appareils.</p>
+    </div>
+
+    <div id="multiLobby">
+      <section class="panel">
+        <h2>Jouer en ligne</h2>
+        <p class="sub">Un appareil crée la partie, l'autre entre le code pour la rejoindre. Chacun reçoit une personne secrète différente, que l'autre doit deviner.</p>
+        <input id="multiName" placeholder="Ton prénom" autocomplete="off"
+          style="width:100%;background:var(--acier);color:var(--texte);border:1px solid #453A66;border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:10px;">
+        <button class="btn btn-primary" id="multiCreateBtn" style="width:100%;margin-bottom:14px;">Créer une partie</button>
+        <div class="centerline" style="max-width:100%;margin:6px 0 14px;"></div>
+        <div style="display:flex;gap:8px;">
+          <input id="multiJoinCode" placeholder="Code à 4 lettres" autocomplete="off" maxlength="4"
+            style="flex:1;text-transform:uppercase;background:var(--acier);color:var(--texte);border:1px solid #453A66;border-radius:8px;padding:10px 12px;font-size:14px;">
+          <button class="btn btn-primary" id="multiJoinBtn">Rejoindre</button>
+        </div>
+        <p id="multiLobbyError" style="display:none;color:#F5C6CB;font-size:12.5px;margin:10px 0 0;"></p>
+      </section>
+    </div>
+
+    <div id="multiWaiting" style="display:none;">
+      <section class="panel" style="text-align:center;">
+        <h2>En attente d'un adversaire…</h2>
+        <p class="sub">Partage ce code avec l'autre joueur :</p>
+        <div class="roomcode" id="multiRoomCode">----</div>
+        <button class="btn btn-ghost" id="multiCancelBtn" style="margin-top:16px;">Annuler</button>
+      </section>
+    </div>
+
+    <div id="multiPlay" style="display:none;">
+      <div class="statusbar">
+        <div class="pill" id="multiTurnPill">C'est ton tour</div>
+        <button class="btn btn-ghost" id="multiLeaveBtn">Quitter</button>
+      </div>
+      <section class="panel">
+        <h2>Ton identité secrète</h2>
+        <p class="sub" id="multiMySecret">—</p>
+        <p class="sub">L'adversaire doit deviner qui tu es. Toi, devine le sien.</p>
+      </section>
+      <section class="panel">
+        <h2>Pose une question sur l'adversaire</h2>
+        <div class="qgrid" id="multiQgrid"></div>
+        <div class="answerbox" id="multiAnswerbox"><span style="color:#8f83b5;">En attente…</span></div>
+        <button class="log-toggle" id="multiLogToggle">Voir l'historique ▾</button>
+        <div class="log" id="multiLog"></div>
+      </section>
+      <div class="rostertitle">
+        <h2>Devine l'adversaire</h2>
+        <span>Choisis dans la liste puis confirme</span>
+      </div>
+      <div style="padding:0 16px;display:flex;gap:8px;">
+        <select id="multiGuessSelect" style="flex:1;background:var(--acier-clair);color:var(--texte);border:1px solid #453A66;border-radius:8px;padding:10px 12px;font-size:14px;">
+          <option value="">Faire une supposition…</option>
+        </select>
+        <button class="btn btn-primary" id="multiGuessBtn">Deviner</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="guessbar" id="duelGuessbar">
+  <div class="guessbar-inner">
+    <select id="guessSelect"><option value="">Faire une supposition…</option></select>
+    <button class="btn btn-primary" id="guessBtn">Deviner</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="overlaycard">
+    <div class="result-tag" id="resultTag">GAGNÉ</div>
+    <div class="avatar" id="revealAvatar" style="font-size:22px;"></div>
+    <h3 id="revealName"></h3>
+    <p id="revealSub"></p>
+    <button class="btn btn-primary" id="playAgainBtn">Rejouer</button>
+  </div>
+</div>
+
+<script>
+const PEOPLE = [
+  {id:1,name:"Michael Jackson",genre:"Pop",language:"Anglophone",gender:"Chanteur",country:"États-Unis",continent:"Amérique du Nord",quebec:false,active:false,era:"Légende",birthYear:1958,careerStart:1964,awards:13,veteran:true,hallOfFame:true},
+  {id:2,name:"Beyoncé",genre:"R&B",language:"Anglophone",gender:"Chanteuse",country:"États-Unis",continent:"Amérique du Nord",quebec:false,active:true,era:"Actif",birthYear:1981,careerStart:1997,awards:32,veteran:true,hallOfFame:false},
+  {id:3,name:"Elton John",genre:"Pop",language:"Anglophone",gender:"Chanteur",country:"Royaume-Uni",continent:"Europe",quebec:false,active:false,era:"Légende",birthYear:1947,careerStart:1969,awards:5,veteran:true,hallOfFame:true},
+  {id:4,name:"Adele",genre:"Pop",language:"Anglophone",gender:"Chanteuse",country:"Royaume-Uni",continent:"Europe",quebec:false,active:true,era:"Actif",birthYear:1988,careerStart:2006,awards:16,veteran:true,hallOfFame:false},
+  {id:5,name:"Whitney Houston",genre:"R&B",language:"Anglophone",gender:"Chanteuse",country:"États-Unis",continent:"Amérique du Nord",quebec:false,active:false,era:"Légende",birthYear:1963,careerStart:1983,awards:6,veteran:true,hallOfFame:true},
+  {id:6,name:"Ed Sheeran",genre:"Pop",language:"Anglophone",gender:"Chanteur",country:"Royaume-Uni",continent:"Europe",quebec:false,active:true,era:"Actif",birthYear:1991,careerStart:2011,awards:4,veteran:true,hallOfFame:false},
+  {id:7,name:"Rihanna",genre:"R&B",language:"Anglophone",gender:"Chanteuse",country:"Barbade",continent:"Amérique du Nord",quebec:false,active:true,era:"Actif",birthYear:1988,careerStart:2005,awards:9,veteran:true,hallOfFame:false},
+  {id:8,name:"Freddie Mercury",genre:"Rock",language:"Anglophone",gender:"Chanteur",country:"Royaume-Uni",continent:"Europe",quebec:false,active:false,era:"Légende",birthYear:1946,careerStart:1970,awards:0,veteran:true,hallOfFame:true},
+  {id:9,name:"Taylor Swift",genre:"Pop",language:"Anglophone",gender:"Chanteuse",country:"États-Unis",continent:"Amérique du Nord",quebec:false,active:true,era:"Actif",birthYear:1989,careerStart:2004,awards:14,veteran:true,hallOfFame:false},
+  {id:10,name:"Elvis Presley",genre:"Rock",language:"Anglophone",gender:"Chanteur",country:"États-Unis",continent:"Amérique du Nord",quebec:false,active:false,era:"Légende",birthYear:1935,careerStart:1954,awards:3,veteran:true,hallOfFame:true},
+  {id:11,name:"Céline Dion",genre:"Pop",language:"Francophone",gender:"Chanteuse",country:"Canada",continent:"Amérique du Nord",quebec:true,active:false,era:"Légende",birthYear:1968,careerStart:1981,awards:5,veteran:true,hallOfFame:true},
+  {id:12,name:"Charles Aznavour",genre:"Chanson",language:"Francophone",gender:"Chanteur",country:"France",continent:"Europe",quebec:false,active:false,era:"Légende",birthYear:1924,careerStart:1946,awards:0,veteran:true,hallOfFame:true},
+  {id:13,name:"Édith Piaf",genre:"Chanson",language:"Francophone",gender:"Chanteuse",country:"France",continent:"Europe",quebec:false,active:false,era:"Légende",birthYear:1915,careerStart:1935,awards:0,veteran:true,hallOfFame:true},
+  {id:14,name:"Garou",genre:"Pop",language:"Francophone",gender:"Chanteur",country:"Canada",continent:"Amérique du Nord",quebec:true,active:true,era:"Actif",birthYear:1972,careerStart:1998,awards:2,veteran:true,hallOfFame:false},
+  {id:15,name:"Ginette Reno",genre:"Chanson",language:"Francophone",gender:"Chanteuse",country:"Canada",continent:"Amérique du Nord",quebec:true,active:false,era:"Légende",birthYear:1946,careerStart:1964,awards:3,veteran:true,hallOfFame:false},
+  {id:16,name:"Stromae",genre:"Pop",language:"Francophone",gender:"Chanteur",country:"Belgique",continent:"Europe",quebec:false,active:true,era:"Actif",birthYear:1985,careerStart:2008,awards:6,veteran:true,hallOfFame:false},
+  {id:17,name:"Zaz",genre:"Chanson",language:"Francophone",gender:"Chanteuse",country:"France",continent:"Europe",quebec:false,active:true,era:"Actif",birthYear:1980,careerStart:2010,awards:1,veteran:true,hallOfFame:false},
+  {id:18,name:"Cœur de Pirate",genre:"Pop",language:"Francophone",gender:"Chanteuse",country:"Canada",continent:"Amérique du Nord",quebec:true,active:true,era:"Actif",birthYear:1989,careerStart:2008,awards:4,veteran:true,hallOfFame:false},
+  {id:19,name:"Roch Voisine",genre:"Pop",language:"Francophone",gender:"Chanteur",country:"Canada",continent:"Amérique du Nord",quebec:false,active:true,era:"Actif",birthYear:1963,careerStart:1986,awards:3,veteran:true,hallOfFame:false},
+  {id:20,name:"Gilles Vigneault",genre:"Chanson",language:"Francophone",gender:"Chanteur",country:"Canada",continent:"Amérique du Nord",quebec:true,active:false,era:"Légende",birthYear:1928,careerStart:1953,awards:2,veteran:true,hallOfFame:true}
+];
+
+const CAREER_END = {
+  1:2009, 3:2023, 5:2012, 8:1991, 10:1977, 11:2024, 12:2018, 13:1963, 15:2018, 20:2008,
+  401:1970, 402:1991, 403:1982, 405:2022, 406:1978, 407:2023
+};
+function applyCareerEnd(list){
+  list.forEach(p=>{ p.careerEnd = CAREER_END.hasOwnProperty(p.id) ? CAREER_END[p.id] : null; });
+}
+
+const QUESTION_POOL = [
+  {text:"Est-ce une chanteuse (femme)?", test:p=>p.gender==="Chanteuse"},
+  {text:"Est-ce un chanteur (homme)?", test:p=>p.gender==="Chanteur"},
+  {text:"Chante-t-il/elle principalement en français?", test:p=>p.language==="Francophone"},
+  {text:"Chante-t-il/elle principalement en anglais?", test:p=>p.language==="Anglophone"},
+  {text:"Est-il/elle né(e) au Québec?", test:p=>p.quebec},
+  {text:"Est-il/elle né(e) en Europe?", test:p=>p.continent==="Europe"},
+  {text:"Est-il/elle né(e) en Amérique du Nord?", test:p=>p.continent==="Amérique du Nord"},
+  {text:"Est-il/elle toujours actif(ve) aujourd'hui?", test:p=>p.active},
+  {text:"A-t-il/elle gagné au moins un grand prix musical?", test:p=>p.awards>0},
+  {text:"Est-il/elle membre d'un temple de la renommée?", test:p=>p.hallOfFame},
+  {text:"Son style est-il la pop?", test:p=>p.genre==="Pop"},
+  {text:"Son style est-il le rock?", test:p=>p.genre==="Rock"},
+  {text:"Son style est-il la chanson (style français traditionnel)?", test:p=>p.genre==="Chanson"},
+  {text:"Son style est-il le R&B?", test:p=>p.genre==="R&B"},
+  {text:"Est-il/elle né(e) avant 1960?", test:p=>p.birthYear<1960},
+  {text:"A-t-il/elle commencé sa carrière avant 1990?", test:p=>p.careerStart<1990},
+  {text:"Son prénom commence-t-il par une voyelle?", test:p=>"AEIOU".includes(p.name.trim()[0].toUpperCase())},
+  {text:"Son nom de famille compte-t-il plus de 7 lettres?", test:p=>{const parts=p.name.split(' ');const last=parts[parts.length-1].replace(/[^A-Za-zÀ-ÿ]/g,'');return last.length>7;}}
+];
+let QUESTIONS = [];
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+// Fixes the iOS Safari quirk where the first tap on a button just dismisses
+// the keyboard instead of firing the click.
+function bindTap(el, handler){
+  if(!el) return;
+  el.addEventListener('touchstart', function(){
+    const active = document.activeElement;
+    if(active && active !== el && typeof active.blur === 'function') active.blur();
+  }, {passive:true});
+  el.addEventListener('click', handler);
+}
+
+const HINTS = [
+  p=>`Son style musical est le ${p.genre.toLowerCase()}.`,
+  p=>`Il/elle chante principalement en ${p.language==='Francophone'?'français':'anglais'}.`,
+  p=>`Il/elle est originaire de ${p.country}.`,
+  p=>p.hallOfFame ? `Il/elle est membre d'un temple de la renommée musicale.` : `Il/elle n'est pas (encore) au temple de la renommée.`,
+  p=>p.active ? `C'est un(e) artiste toujours actif(ve).` : `C'est une légende, plus vraiment active aujourd'hui.`
+];
+
+function initials(name){
+  return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+}
+
+const GENRE_COLORS = {"Rock":"gen-rock","Chanson":"gen-country"};
+
+function handleAvatarError(imgEl, personId){
+  const p = PLAYERS.find(pl=>pl.id===personId) || (typeof SOLO_PLAYERS!=='undefined' && SOLO_PLAYERS.find(pl=>pl.id===personId)) || (typeof GROUPS!=='undefined' && GROUPS.find(pl=>pl.id===personId));
+  if(p && imgEl && imgEl.parentElement) imgEl.parentElement.innerHTML = mascotSVG(p);
+}
+
+function avatarInner(p){
+  if(p.photo){
+    return `<img src="${p.photo}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;" onerror="handleAvatarError(this, ${p.id})">`;
+  }
+  return mascotSVG(p);
+}
+
+const MIC_COLORS = {"Pop":"#8B2FC9","R&B":"#B0294A","Rock":"#3B2A66","Chanson":"#7C6A3E"};
+const MIC_DARK   = {"Pop":"#5E1E8C","R&B":"#7E1522","Rock":"#241A44","Chanson":"#4E4227"};
+
+function seedFrom(id, salt){
+  const x = Math.sin(id * 12.9898 + salt * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+// A small original silhouette holding a microphone — purely decorative, not
+// a likeness of anyone real. Colored by musical genre.
+const MASCOT_SKIN = ['#F2C29B','#E0A978','#C68F5B','#8D5524','#FBD8B4'];
+const MASCOT_HAIR = ['#2B1B0E','#4A2E1A','#8B5A2B','#C9A961','#1A1A1A','#6B4226'];
+
+function mascotSVG(p){
+  const color = MIC_COLORS[p.genre] || '#8B2FC9';
+  const dark = MIC_DARK[p.genre] || '#5E1E8C';
+  const skin = MASCOT_SKIN[Math.floor(seedFrom(p.id, 4) * MASCOT_SKIN.length)];
+  const hair = MASCOT_HAIR[Math.floor(seedFrom(p.id, 5) * MASCOT_HAIR.length)];
+  const bald = seedFrom(p.id, 6) > 0.82;
+  const leanRight = seedFrom(p.id, 1) > 0.5;
+  const flip = leanRight ? '' : `transform="scale(-1,1) translate(-40,0)"`;
+  return `<svg viewBox="0 0 40 40" width="100%" height="100%" style="display:block;">
+    <g ${flip}>
+      <path d="M13 13 Q20 9 27 13 L26 26 L14 26 Z" fill="${color}"/>
+      <rect x="14" y="25" width="12" height="10" rx="1.5" fill="${dark}"/>
+      <line x1="27" y1="17" x2="32" y2="12" stroke="${color}" stroke-width="3" stroke-linecap="round"/>
+      <rect x="30.5" y="8.5" width="4.5" height="6.5" rx="2.2" fill="${dark}"/>
+      <line x1="32.7" y1="15" x2="32.7" y2="21" stroke="${dark}" stroke-width="1.2"/>
+      ${bald ? '' : `<path d="M15.5 6.3 Q20 3 24.5 6.3" stroke="${hair}" stroke-width="2.1" fill="none" stroke-linecap="round"/>`}
+      <circle cx="20" cy="8.5" r="4.2" fill="${color}"/>
+      <circle cx="20" cy="11.4" r="1.7" fill="${skin}"/>
+    </g>
+  </svg>`;
+}
+
+const CURRENT = PEOPLE.filter(p=>true);
+const PLAYERS = CURRENT;
+
+// Groupes de musique — réservés au mode Solo, comme les vedettes en plus au
+// hockey. "gender" vaut "Groupe" au lieu de Chanteur/Chanteuse.
+const GROUPS = [
+  {id:401,name:"The Beatles",genre:"Rock",language:"Anglophone",gender:"Groupe",country:"Royaume-Uni",continent:"Europe",quebec:false,active:false,era:"Légende",birthYear:1960,careerStart:1960,awards:7,veteran:true,hallOfFame:true},
+  {id:402,name:"Queen",genre:"Rock",language:"Anglophone",gender:"Groupe",country:"Royaume-Uni",continent:"Europe",quebec:false,active:false,era:"Légende",birthYear:1970,careerStart:1970,awards:0,veteran:true,hallOfFame:true},
+  {id:403,name:"ABBA",genre:"Pop",language:"Anglophone",gender:"Groupe",country:"Suède",continent:"Europe",quebec:false,active:false,era:"Légende",birthYear:1972,careerStart:1972,awards:0,veteran:true,hallOfFame:true},
+  {id:404,name:"Coldplay",genre:"Rock",language:"Anglophone",gender:"Groupe",country:"Royaume-Uni",continent:"Europe",quebec:false,active:true,era:"Actif",birthYear:1996,careerStart:1996,awards:7,veteran:true,hallOfFame:false},
+  {id:405,name:"Fleetwood Mac",genre:"Rock",language:"Anglophone",gender:"Groupe",country:"Royaume-Uni",continent:"Europe",quebec:false,active:false,era:"Légende",birthYear:1967,careerStart:1967,awards:0,veteran:true,hallOfFame:true},
+  {id:406,name:"Beau Dommage",genre:"Chanson",language:"Francophone",gender:"Groupe",country:"Canada",continent:"Amérique du Nord",quebec:true,active:false,era:"Légende",birthYear:1973,careerStart:1973,awards:0,veteran:true,hallOfFame:false},
+  {id:407,name:"Les Cowboys Fringants",genre:"Chanson",language:"Francophone",gender:"Groupe",country:"Canada",continent:"Amérique du Nord",quebec:true,active:false,era:"Légende",birthYear:1997,careerStart:1997,awards:3,veteran:true,hallOfFame:false},
+  {id:408,name:"Indochine",genre:"Rock",language:"Francophone",gender:"Groupe",country:"France",continent:"Europe",quebec:false,active:true,era:"Actif",birthYear:1981,careerStart:1981,awards:2,veteran:true,hallOfFame:false},
+  {id:409,name:"Les Trois Accords",genre:"Rock",language:"Francophone",gender:"Groupe",country:"Canada",continent:"Amérique du Nord",quebec:true,active:true,era:"Actif",birthYear:1999,careerStart:1999,awards:2,veteran:true,hallOfFame:false},
+  {id:410,name:"Mes Aïeux",genre:"Chanson",language:"Francophone",gender:"Groupe",country:"Canada",continent:"Amérique du Nord",quebec:true,active:true,era:"Actif",birthYear:1996,careerStart:1996,awards:1,veteran:true,hallOfFame:false}
+];
+
+const SOLO_PLAYERS = [...PLAYERS, ...GROUPS];
+applyCareerEnd(PLAYERS);
+applyCareerEnd(GROUPS);
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDhAhnY6cLeVIFZ0QjfIzipwb6R77tsL_8",
+  authDomain: "guess-who-ch.firebaseapp.com",
+  databaseURL: "https://guess-who-ch-default-rtdb.firebaseio.com",
+  projectId: "guess-who-ch"
+};
+const MULTI_ROOM_PREFIX = "singerRooms/";
+
+const CONTENT_URL = "";
+
+async function loadRemoteContent(){
+  if(!CONTENT_URL) return;
+  try{
+    const res = await fetch(CONTENT_URL, {cache:"no-store"});
+    if(!res.ok) return;
+    const data = await res.json();
+    if(Array.isArray(data.players)){
+      data.players.forEach(p=>{
+        const existing = PLAYERS.find(e=>e.id===p.id) || GROUPS.find(e=>e.id===p.id);
+        if(existing){
+          Object.assign(existing, p);
+        } else {
+          PLAYERS.push(p);
+          SOLO_PLAYERS.push(p);
+        }
+      });
+    }
+    if(Array.isArray(data.questions)){
+      data.questions.forEach(q=>{
+        if(typeof q.field === "string" && typeof q.text === "string"){
+          QUESTION_POOL.push({text:q.text, test:p=>Boolean(p[q.field])});
+        }
+      });
+    }
+  }catch(e){ /* pas de connexion ou fichier absent */ }
+}
+
+let secret = null;
+let eliminated = new Set();
+let askedIdx = new Set();
+let hintsLeft = 3;
+
+const HINT_COST = 5;
+const COIN_STORAGE_KEY = 'quiEstCeCoinsGlobal';
+function loadSavedCoins(){
+  try{
+    const saved = localStorage.getItem(COIN_STORAGE_KEY);
+    if(saved !== null){ const n = parseInt(saved, 10); if(!isNaN(n)) return n; }
+  }catch(e){}
+  return 20;
+}
+let coinBalance = loadSavedCoins();
+const coinCountEl = document.getElementById('coinCount');
+coinCountEl.textContent = coinBalance;
+function saveCoins(){ try{ localStorage.setItem(COIN_STORAGE_KEY, String(coinBalance)); }catch(e){} }
+function addCoins(n){ coinBalance += n; coinCountEl.textContent = coinBalance; saveCoins(); }
+function spendCoins(n){ if(coinBalance < n) return false; coinBalance -= n; coinCountEl.textContent = coinBalance; saveCoins(); return true; }
+
+const gridEl = document.getElementById('grid');
+const qgridEl = document.getElementById('qgrid');
+const answerbox = document.getElementById('answerbox');
+const logEl = document.getElementById('log');
+const remCount = document.getElementById('remCount');
+const qCount = document.getElementById('qCount');
+const guessSelect = document.getElementById('guessSelect');
+const hintCounter = document.getElementById('hintCounter');
+const hintBtn = document.getElementById('hintBtn');
+
+function renderRoster(){
+  gridEl.innerHTML = '';
+  guessSelect.innerHTML = '<option value="">Faire une supposition…</option>';
+  PLAYERS.forEach(p=>{
+    const card = document.createElement('div');
+    card.className = 'card' + (eliminated.has(p.id)?' eliminated':'');
+    card.innerHTML = `
+      <div class="cardface">
+        <div class="front" data-id="${p.id}">
+          <div class="cardbg">${avatarInner(p)}</div>
+          <div class="cardscrim"></div>
+          <span class="era ${p.active?'actif':'legende'}">${p.active?'Actif':'Légende'}</span>
+          <div class="cardtext">
+            <div class="cname">${p.name}</div>
+            <div class="cpos">${p.genre} — ${p.language}</div>
+          </div>
+        </div>
+        <div class="back"><span>écarté</span></div>
+      </div>`;
+    card.querySelector('.front').addEventListener('click', ()=>toggleEliminate(p.id));
+    card.querySelector('.back').addEventListener('click', ()=>toggleEliminate(p.id));
+    gridEl.appendChild(card);
+    if(!eliminated.has(p.id)){
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name;
+      guessSelect.appendChild(opt);
+    }
+  });
+  remCount.textContent = PLAYERS.length - eliminated.size;
+}
+
+function toggleEliminate(id){
+  if(eliminated.has(id)) eliminated.delete(id);
+  else eliminated.add(id);
+  renderRoster();
+}
+
+function renderQuestions(){
+  qgridEl.innerHTML = '';
+  QUESTIONS.forEach((q, idx)=>{
+    const b = document.createElement('button');
+    b.className = 'qbtn';
+    b.textContent = q.text;
+    b.disabled = askedIdx.has(idx);
+    b.addEventListener('click', ()=>askQuestion(idx));
+    qgridEl.appendChild(b);
+  });
+}
+
+function askQuestion(idx){
+  if(askedIdx.has(idx)) return;
+  askedIdx.add(idx);
+  const q = QUESTIONS[idx];
+  const answer = q.test(secret);
+  answerbox.innerHTML = `<span class="badge ${answer?'oui':'non'}">${answer?'Oui':'Non'}</span><span>${q.text}</span>`;
+  const item = document.createElement('div');
+  item.className = 'log-item';
+  item.textContent = `${answer?'Oui':'Non'} — ${q.text}`;
+  logEl.prepend(item);
+  qCount.textContent = askedIdx.size;
+
+  PLAYERS.forEach(p=>{ if(q.test(p) !== answer) eliminated.add(p.id); });
+
+  renderQuestions();
+  renderRoster();
+}
+
+document.getElementById('logToggle').addEventListener('click', ()=>{
+  const open = logEl.classList.toggle('open');
+  document.getElementById('logToggle').textContent = open ? "Masquer l'historique ▴" : "Voir l'historique des réponses ▾";
+});
+
+function updateHintButton(){
+  if(hintsLeft > 0){
+    hintBtn.textContent = 'Obtenir un indice';
+    hintBtn.disabled = false;
+    hintCounter.textContent = `${hintsLeft} indice${hintsLeft!==1?'s':''} restant${hintsLeft!==1?'s':''}`;
+  } else {
+    hintBtn.textContent = `Acheter un indice (${HINT_COST} pièces)`;
+    hintBtn.disabled = coinBalance < HINT_COST;
+    hintCounter.textContent = 'Indices gratuits épuisés';
+  }
+}
+
+bindTap(hintBtn, ()=>{
+  if(hintsLeft > 0){ hintsLeft--; } else { if(!spendCoins(HINT_COST)) return; }
+  const hintFn = HINTS[Math.floor(Math.random()*HINTS.length)];
+  answerbox.innerHTML = `<span class="badge" style="background:var(--or);color:#2a2107;">Indice</span><span>${hintFn(secret)}</span>`;
+  updateHintButton();
+});
+
+bindTap(document.getElementById('guessBtn'), ()=>{
+  const val = guessSelect.value;
+  if(!val){
+    answerbox.innerHTML = `<span style="color:#F5C6CB;">Choisis d'abord une personne dans la liste déroulante.</span>`;
+    return;
+  }
+  const guess = PLAYERS.find(p=>p.id===Number(val));
+  const win = guess.id === secret.id;
+  addCoins(win ? 12 : 3);
+  updateHintButton();
+  showResult(win);
+});
+
+let lastResultMode = 'duel';
+function showResult(win, who, mode){
+  const player = who || secret;
+  lastResultMode = mode || 'duel';
+  const overlay = document.getElementById('overlay');
+  const tag = document.getElementById('resultTag');
+  tag.textContent = win ? 'GAGNÉ' : 'RATÉ';
+  tag.className = 'result-tag ' + (win?'win':'lose');
+  document.getElementById('revealAvatar').innerHTML = avatarInner(player);
+  document.getElementById('revealName').textContent = player.name;
+  document.getElementById('revealSub').textContent = win
+    ? `Bien joué — c'était bien cette personne.`
+    : `La personne secrète était ${player.name}. Retente ta chance.`;
+  overlay.classList.add('show');
+}
+
+document.getElementById('playAgainBtn').addEventListener('click', ()=>{
+  document.getElementById('overlay').classList.remove('show');
+  if(lastResultMode === 'solo') newSoloGame();
+  else if(lastResultMode === 'multi'){ if(roomRef) roomRef.remove(); leaveMultiRoom(); }
+  else newGame();
+});
+document.getElementById('newGameBtn').addEventListener('click', newGame);
+
+function newGame(){
+  secret = PLAYERS[Math.floor(Math.random()*PLAYERS.length)];
+  QUESTIONS = shuffle(QUESTION_POOL).slice(0, 12);
+  eliminated = new Set();
+  askedIdx = new Set();
+  hintsLeft = 3;
+  updateHintButton();
+  qCount.textContent = 0;
+  answerbox.innerHTML = `<span style="color:#8f83b5;">Choisis une question pour commencer.</span>`;
+  logEl.innerHTML = '';
+  logEl.classList.remove('open');
+  document.getElementById('logToggle').textContent = "Voir l'historique des réponses ▾";
+  renderRoster();
+  renderQuestions();
+}
+
+/* ---------- Mode tabs ---------- */
+const tabDuel = document.getElementById('tabDuel');
+const tabSolo = document.getElementById('tabSolo');
+const tabMulti = document.getElementById('tabMulti');
+const duelMode = document.getElementById('duelMode');
+const soloModeEl = document.getElementById('soloMode');
+const multiModeEl = document.getElementById('multiMode');
+const duelGuessbar = document.getElementById('duelGuessbar');
+
+tabDuel.addEventListener('click', ()=>switchTab('duel'));
+tabSolo.addEventListener('click', ()=>switchTab('solo'));
+tabMulti.addEventListener('click', ()=>switchTab('multi'));
+
+function switchTab(mode){
+  tabDuel.classList.toggle('active', mode==='duel');
+  tabSolo.classList.toggle('active', mode==='solo');
+  tabMulti.classList.toggle('active', mode==='multi');
+  duelMode.style.display = mode==='duel' ? '' : 'none';
+  soloModeEl.style.display = mode==='solo' ? '' : 'none';
+  multiModeEl.style.display = mode==='multi' ? '' : 'none';
+  duelGuessbar.style.display = mode==='duel' ? '' : 'none';
+  if(mode==='solo' && !soloSecret) newSoloGame();
+  if(mode==='multi') initMultiTab();
+}
+
+/* ---------- Solo mode ---------- */
+const DIFFICULTY = {
+  facile:    {tries:9, hints:3, blurStart:8,  blurStep:1.2, revealBadgesFromStart:true},
+  normal:    {tries:6, hints:2, blurStart:14, blurStep:2.5, revealBadgesFromStart:true},
+  difficile: {tries:4, hints:1, blurStart:22, blurStep:4,   revealBadgesFromStart:false}
+};
+let soloDifficulty = 'normal';
+let soloSecret = null;
+let soloTriesLeft = 6;
+let soloHintsLeft = 2;
+let soloGuessedIds = new Set();
+
+const soloNumEl = document.getElementById('soloNum');
+const soloCardEl = document.getElementById('soloCard');
+const soloEraEl = document.getElementById('soloEra');
+const soloContinentEl = document.getElementById('soloContinent');
+const soloPosEl = document.getElementById('soloPos');
+const soloScrambleWrap = document.getElementById('soloScrambleWrap');
+const silhouettewrapEl = document.getElementById('silhouettewrap');
+const soloImgToggle = document.getElementById('soloImgToggle');
+let soloShowImage = true;
+
+soloImgToggle.addEventListener('change', ()=>{
+  soloShowImage = soloImgToggle.checked;
+  applySoloImageVisibility();
+});
+function applySoloImageVisibility(){ silhouettewrapEl.style.display = soloShowImage ? '' : 'none'; }
+
+const soloPickToggle = document.getElementById('soloPickToggle');
+const soloPickGridEl = document.getElementById('soloPickGrid');
+let soloShowPickGrid = true;
+soloPickToggle.addEventListener('change', ()=>{
+  soloShowPickGrid = soloPickToggle.checked;
+  applySoloPickGridVisibility();
+});
+function applySoloPickGridVisibility(){ soloPickGridEl.style.display = soloShowPickGrid ? '' : 'none'; }
+
+function renderSoloPickGrid(){
+  if(!soloShowPickGrid){ soloPickGridEl.innerHTML = ''; return; }
+  soloPickGridEl.innerHTML = SOLO_PLAYERS.map(p=>`
+    <div class="picktile ${soloGuessedIds.has(p.id)?'tried':''}" data-id="${p.id}">
+      <div class="avatar">${avatarInner(p)}</div>
+      <div class="pickname">${p.name}</div>
+    </div>`).join('');
+  soloPickGridEl.querySelectorAll('.picktile:not(.tried)').forEach(el=>{
+    bindTap(el, ()=>{
+      const p = SOLO_PLAYERS.find(pl=>pl.id===Number(el.dataset.id));
+      if(p) processSoloGuess(p);
+    });
+  });
+}
+
+document.querySelectorAll('.difficulty').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    soloDifficulty = btn.dataset.diff;
+    document.querySelectorAll('.difficulty').forEach(b=>b.classList.toggle('active', b===btn));
+    newSoloGame();
+  });
+});
+
+const soloTriesEl = document.getElementById('soloTries');
+const soloInput = document.getElementById('soloInput');
+const soloGuessesEl = document.getElementById('soloGuesses');
+const soloHintBtn = document.getElementById('soloHintBtn');
+const soloHintCounter = document.getElementById('soloHintCounter');
+const soloHintBox = document.getElementById('soloHintBox');
+const soloGuessError = document.getElementById('soloGuessError');
+
+const GENRE_LABELS = {"Pop":"Pop","R&B":"R&B","Rock":"Rock","Chanson":"Chanson"};
+
+function scrambleName(name){
+  return name.split(' ').map(word=>shuffle(word.split(''))).map(letters=>letters.join('')).join('   ');
+}
+function arrowCompare(foundVal, secretVal){
+  if(foundVal === secretVal) return {sym:'\u2713', hit:true};
+  return {sym: secretVal > foundVal ? '\u2191' : '\u2193', hit:false};
+}
+
+let soloNameLetters = [];
+let soloBoxFill = [];
+let soloPoolOrder = [];
+let soloPoolUsed = [];
+
+function buildSoloLetterPuzzle(){
+  const words = soloSecret.name.split(' ');
+  soloNameLetters = [];
+  words.forEach((w, wi)=>{ w.split('').forEach(ch=> soloNameLetters.push({ch, wordIndex:wi})); });
+  soloBoxFill = new Array(soloNameLetters.length).fill(null);
+  soloPoolUsed = new Array(soloNameLetters.length).fill(false);
+  soloPoolOrder = shuffle(soloNameLetters.map((_,i)=>i));
+  drawSoloBoxes();
+  drawSoloPool();
+}
+function drawSoloBoxes(){
+  const words = soloSecret.name.split(' ');
+  let idx = 0; let html = '';
+  words.forEach(w=>{
+    html += '<div class="wordgroup">';
+    for(let i=0;i<w.length;i++){
+      const tileIdx = soloBoxFill[idx];
+      const ch = tileIdx!==null ? soloNameLetters[tileIdx].ch : '';
+      html += `<div class="letterbox ${tileIdx!==null?'filled':''}" data-slot="${idx}">${ch}</div>`;
+      idx++;
+    }
+    html += '</div>';
+  });
+  soloBoxesEl.innerHTML = html;
+  soloBoxesEl.querySelectorAll('.letterbox.filled').forEach(el=>{
+    el.addEventListener('click', ()=> clearSoloSlot(Number(el.dataset.slot)));
+  });
+}
+function drawSoloPool(){
+  soloPoolEl.innerHTML = soloPoolOrder.map(ti=>{
+    const used = soloPoolUsed[ti];
+    return `<div class="lettertile ${used?'used':''}" data-tile="${ti}">${soloNameLetters[ti].ch.toUpperCase()}</div>`;
+  }).join('');
+  soloPoolEl.querySelectorAll('.lettertile:not(.used)').forEach(el=>{
+    el.addEventListener('click', ()=> placeSoloTile(Number(el.dataset.tile)));
+  });
+}
+function placeSoloTile(tileIdx){
+  const slot = soloBoxFill.findIndex(v=>v===null);
+  if(slot === -1) return;
+  soloBoxFill[slot] = tileIdx;
+  soloPoolUsed[tileIdx] = true;
+  drawSoloBoxes(); drawSoloPool();
+  maybeSyncSoloInput();
+}
+function clearSoloSlot(slot){
+  const tileIdx = soloBoxFill[slot];
+  if(tileIdx===null) return;
+  soloBoxFill[slot] = null;
+  soloPoolUsed[tileIdx] = false;
+  drawSoloBoxes(); drawSoloPool();
+}
+function maybeSyncSoloInput(){
+  if(!soloBoxFill.every(v=>v!==null)) return;
+  const words = soloSecret.name.split(' ');
+  let idx = 0;
+  const assembled = words.map(w=>{
+    let out = '';
+    for(let i=0;i<w.length;i++){ out += soloNameLetters[soloBoxFill[idx]].ch; idx++; }
+    return out;
+  }).join(' ');
+  soloInput.value = assembled;
+}
+
+const soloBoxesEl = document.getElementById('soloBoxes');
+const soloPoolEl = document.getElementById('soloPool');
+const POS_GROUP_CLASS = {};
+const SOLO_START_BLUR = 14;
+
+function newSoloGame(){
+  const cfg = DIFFICULTY[soloDifficulty];
+  soloSecret = SOLO_PLAYERS[Math.floor(Math.random()*SOLO_PLAYERS.length)];
+  soloTriesLeft = cfg.tries;
+  soloHintsLeft = cfg.hints;
+  soloGuessedIds = new Set();
+  soloTriesEl.textContent = soloTriesLeft;
+
+  soloNumEl.textContent = soloSecret.genre;
+  soloNumEl.style.filter = `blur(${cfg.blurStart}px)`;
+  soloCardEl.className = 'silhouettecard ' + (GENRE_COLORS[soloSecret.genre] || '');
+  buildSoloLetterPuzzle();
+  applySoloImageVisibility();
+  renderSoloPickGrid();
+  applySoloPickGridVisibility();
+
+  if(cfg.revealBadgesFromStart){
+    soloEraEl.style.visibility = 'visible';
+    soloContinentEl.style.visibility = 'visible';
+    soloPosEl.style.visibility = 'visible';
+    soloScrambleWrap.style.display = '';
+  } else {
+    soloEraEl.style.visibility = 'hidden';
+    soloContinentEl.style.visibility = 'hidden';
+    soloPosEl.style.visibility = 'hidden';
+    soloScrambleWrap.style.display = 'none';
+  }
+  soloEraEl.textContent = soloSecret.active ? 'Actif' : 'Légende';
+  soloEraEl.className = 'era ' + (soloSecret.active ? 'actif' : 'legende');
+  soloContinentEl.textContent = soloSecret.continent;
+  soloPosEl.textContent = soloSecret.language;
+
+  soloInput.value = '';
+  soloGuessesEl.innerHTML = '';
+  soloGuessError.style.display = 'none';
+  updateSoloHintButton();
+  soloHintBox.style.display = 'none';
+}
+
+function revealSoloBadges(){
+  soloEraEl.style.visibility = 'visible';
+  soloContinentEl.style.visibility = 'visible';
+  soloPosEl.style.visibility = 'visible';
+  soloScrambleWrap.style.display = '';
+}
+function updateSoloBlur(){
+  const cfg = DIFFICULTY[soloDifficulty];
+  const usedTries = cfg.tries - soloTriesLeft;
+  const blurPx = Math.max(0, cfg.blurStart - usedTries * cfg.blurStep);
+  soloNumEl.style.filter = `blur(${blurPx}px)`;
+}
+
+function soloGuess(){
+  const raw = soloInput.value.trim();
+  soloGuessError.style.display = 'none';
+  if(soloTriesLeft<=0) return;
+  if(!raw){
+    soloGuessError.textContent = 'Écris un nom avant de deviner.';
+    soloGuessError.style.display = 'block';
+    return;
+  }
+  const found = SOLO_PLAYERS.find(p=>p.name.toLowerCase() === raw.toLowerCase());
+  if(!found){
+    soloGuessError.textContent = `« ${raw} » ne correspond à aucune personne de la liste. Vérifie l'orthographe exacte.`;
+    soloGuessError.style.display = 'block';
+    return;
+  }
+  soloInput.value = '';
+  processSoloGuess(found);
+}
+
+function processSoloGuess(found){
+  if(soloTriesLeft<=0) return;
+  soloGuessError.style.display = 'none';
+  if(soloGuessedIds.has(found.id)){
+    soloGuessError.textContent = 'Déjà essayé — propose un autre nom.';
+    soloGuessError.style.display = 'block';
+    return;
+  }
+  soloGuessedIds.add(found.id);
+  renderSoloPickGrid();
+
+  const win = found.id === soloSecret.id;
+  const row = document.createElement('div');
+  row.className = 'guesscard';
+  const genreHit = found.genre === soloSecret.genre;
+  const langHit = found.language === soloSecret.language;
+  const careerHit = found.careerStart === soloSecret.careerStart;
+  const careerArrow = careerHit ? '' : (soloSecret.careerStart > found.careerStart ? ' ↑' : ' ↓');
+  const awardsHit = found.awards === soloSecret.awards;
+  const awardsArrow = awardsHit ? '' : (soloSecret.awards > found.awards ? ' ↑' : ' ↓');
+  const foundSpan = `${found.careerStart}–${found.careerEnd || 'présent'}`;
+  row.innerHTML = `
+    <div class="guesscard-head">
+      <div class="avatar">${avatarInner(found)}</div>
+      <span class="guesscard-name">${found.name}</span>
+      ${win ? '<span class="wintag">✓ Trouvé</span>' : ''}
+    </div>
+    <div class="statrow">
+      <div class="stattile ${genreHit?'hit':'miss'}"><b>GENRE</b><span>${found.genre}</span></div>
+      <div class="stattile ${langHit?'hit':'miss'}"><b>LANGUE</b><span>${found.language}</span></div>
+      <div class="stattile ${careerHit?'hit':'miss'}"><b>CARRIÈRE</b><span>${foundSpan}${careerArrow}</span></div>
+    </div>
+    <div class="statrow">
+      <div class="stattile ${awardsHit?'hit':'miss'}"><b>PRIX GAGNÉS</b><span>${found.awards}${awardsArrow}</span></div>
+    </div>`;
+  soloGuessesEl.prepend(row);
+
+  if(win){
+    soloNumEl.style.filter = 'blur(0px)';
+    addCoins(10 + soloTriesLeft*2);
+    updateSoloHintButton();
+    showResult(true, soloSecret, 'solo');
+    return;
+  }
+  soloTriesLeft--;
+  soloTriesEl.textContent = soloTriesLeft;
+  updateSoloBlur();
+  if(!DIFFICULTY[soloDifficulty].revealBadgesFromStart) revealSoloBadges();
+  if(soloTriesLeft<=0){
+    soloNumEl.style.filter = 'blur(0px)';
+    addCoins(3);
+    updateSoloHintButton();
+    showResult(false, soloSecret, 'solo');
+  }
+}
+
+bindTap(document.getElementById('soloGuessBtn'), soloGuess);
+soloInput.addEventListener('keydown', e=>{ if(e.key==='Enter') soloGuess(); });
+document.getElementById('newSoloBtn').addEventListener('click', newSoloGame);
+
+function updateSoloHintButton(){
+  if(soloHintsLeft > 0){
+    soloHintBtn.textContent = 'Obtenir un indice';
+    soloHintBtn.disabled = false;
+    soloHintCounter.textContent = `${soloHintsLeft} indice${soloHintsLeft!==1?'s':''} restant${soloHintsLeft!==1?'s':''}`;
+  } else {
+    soloHintBtn.textContent = `Acheter un indice (${HINT_COST} pièces)`;
+    soloHintBtn.disabled = coinBalance < HINT_COST;
+    soloHintCounter.textContent = 'Indices gratuits épuisés';
+  }
+}
+bindTap(soloHintBtn, ()=>{
+  if(soloHintsLeft > 0){ soloHintsLeft--; } else { if(!spendCoins(HINT_COST)) return; }
+  const hintFn = HINTS[Math.floor(Math.random()*HINTS.length)];
+  soloHintBox.style.display = 'flex';
+  soloHintBox.innerHTML = `<span class="badge" style="background:var(--or);color:#2a2107;">Indice</span><span>${hintFn(soloSecret)}</span>`;
+  updateSoloHintButton();
+});
+
+/* ---------- Multiplayer ---------- */
+let fbDb = null;
+let multiConfigured = false;
+if(FIREBASE_CONFIG.apiKey){
+  try{
+    if(!firebase.apps || !firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    fbDb = firebase.database();
+    multiConfigured = true;
+  }catch(e){ multiConfigured = false; }
+}
+
+const multiNoConfig = document.getElementById('multiNoConfig');
+const multiLobby = document.getElementById('multiLobby');
+const multiWaiting = document.getElementById('multiWaiting');
+const multiPlay = document.getElementById('multiPlay');
+const multiName = document.getElementById('multiName');
+const multiJoinCode = document.getElementById('multiJoinCode');
+const multiLobbyError = document.getElementById('multiLobbyError');
+const multiRoomCode = document.getElementById('multiRoomCode');
+const multiTurnPill = document.getElementById('multiTurnPill');
+const multiMySecret = document.getElementById('multiMySecret');
+const multiQgrid = document.getElementById('multiQgrid');
+const multiAnswerbox = document.getElementById('multiAnswerbox');
+const multiLog = document.getElementById('multiLog');
+const multiGuessSelect = document.getElementById('multiGuessSelect');
+
+let myRole = null;
+let myRoomCode = null;
+let myName = '';
+let roomRef = null;
+let roomData = null;
+let multiQuestions = [];
+let multiAskedIdx = new Set();
+let multiTabInited = false;
+
+function generateRoomCode(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for(let i=0;i<4;i++) code += chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+function initMultiTab(){
+  if(!multiConfigured){
+    multiNoConfig.style.display = 'block';
+    multiLobby.style.display = 'none';
+    return;
+  }
+  multiNoConfig.style.display = 'none';
+  if(!multiTabInited){ populateMultiGuessSelect(); multiTabInited = true; }
+}
+function populateMultiGuessSelect(){
+  multiGuessSelect.innerHTML = '<option value="">Faire une supposition…</option>' +
+    PLAYERS.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+}
+function showLobbyView(view){
+  multiLobby.style.display = view==='lobby' ? '' : 'none';
+  multiWaiting.style.display = view==='waiting' ? '' : 'none';
+  multiPlay.style.display = view==='play' ? '' : 'none';
+}
+
+document.getElementById('multiCreateBtn').addEventListener('click', ()=>{
+  myName = multiName.value.trim() || 'Joueur 1';
+  const code = generateRoomCode();
+  const secretId = PLAYERS[Math.floor(Math.random()*PLAYERS.length)].id;
+  myRole = 'p1'; myRoomCode = code;
+  multiAskedIdx = new Set();
+  multiQuestions = shuffle(QUESTION_POOL).slice(0, 12);
+  fbDb.ref(MULTI_ROOM_PREFIX + code).set({
+    status: 'waiting', turn: 'p1',
+    players: { p1: { name: myName, secretId, connected: true } },
+    log: [], winner: null,
+    createdAt: firebase.database.ServerValue.TIMESTAMP
+  }).then(()=>{
+    multiRoomCode.textContent = code;
+    showLobbyView('waiting');
+    attachRoomListener();
+  }).catch(()=>{
+    multiLobbyError.textContent = "Impossible de créer la partie. Vérifie ta connexion.";
+    multiLobbyError.style.display = 'block';
+  });
+});
+
+document.getElementById('multiCancelBtn').addEventListener('click', ()=>{
+  if(roomRef) roomRef.remove();
+  leaveMultiRoom();
+});
+
+document.getElementById('multiJoinBtn').addEventListener('click', ()=>{
+  const code = multiJoinCode.value.trim().toUpperCase();
+  myName = multiName.value.trim() || 'Joueur 2';
+  multiLobbyError.style.display = 'none';
+  if(code.length !== 4){
+    multiLobbyError.textContent = 'Entre le code à 4 lettres reçu de ton adversaire.';
+    multiLobbyError.style.display = 'block';
+    return;
+  }
+  const ref = fbDb.ref(MULTI_ROOM_PREFIX + code);
+  ref.get().then(snap=>{
+    const data = snap.val();
+    if(!data){
+      multiLobbyError.textContent = "Aucune partie trouvée avec ce code.";
+      multiLobbyError.style.display = 'block';
+      return;
+    }
+    if(data.players && data.players.p2){
+      multiLobbyError.textContent = "Cette partie est déjà complète.";
+      multiLobbyError.style.display = 'block';
+      return;
+    }
+    let secretId = PLAYERS[Math.floor(Math.random()*PLAYERS.length)].id;
+    if(data.players && data.players.p1 && secretId === data.players.p1.secretId){
+      const alt = PLAYERS.filter(p=>p.id!==secretId);
+      secretId = alt[Math.floor(Math.random()*alt.length)].id;
+    }
+    myRole = 'p2'; myRoomCode = code;
+    multiAskedIdx = new Set();
+    multiQuestions = shuffle(QUESTION_POOL).slice(0, 12);
+    ref.update({ status: 'playing', 'players/p2': { name: myName, secretId, connected: true } })
+      .then(()=>{ attachRoomListener(); });
+  }).catch(()=>{
+    multiLobbyError.textContent = "Impossible de rejoindre la partie. Vérifie ta connexion.";
+    multiLobbyError.style.display = 'block';
+  });
+});
+
+function attachRoomListener(){
+  roomRef = fbDb.ref(MULTI_ROOM_PREFIX + myRoomCode);
+  roomRef.on('value', snap=>{
+    roomData = snap.val();
+    if(!roomData){ leaveMultiRoom(); return; }
+    renderMultiRoom();
+  });
+}
+
+function renderMultiRoom(){
+  if(roomData.status === 'waiting'){
+    showLobbyView('waiting');
+    multiRoomCode.textContent = myRoomCode;
+    return;
+  }
+  showLobbyView('play');
+  const oppRole = myRole === 'p1' ? 'p2' : 'p1';
+  const me = roomData.players[myRole];
+  const opp = roomData.players[oppRole];
+  const mySecretPlayer = me ? PLAYERS.find(p=>p.id===me.secretId) : null;
+  if(mySecretPlayer){
+    multiMySecret.textContent = `Tu es : ${mySecretPlayer.name} (${mySecretPlayer.genre}, ${mySecretPlayer.language})`;
+  }
+  if(roomData.status === 'finished'){
+    const won = roomData.winner === myRole;
+    const oppSecretPlayer = opp ? PLAYERS.find(p=>p.id===opp.secretId) : null;
+    showResult(won, oppSecretPlayer || mySecretPlayer, 'multi');
+    return;
+  }
+  const myTurn = roomData.turn === myRole && !!opp;
+  multiTurnPill.innerHTML = !opp ? "En attente d'un adversaire…" : myTurn ? "C'est ton tour" : `Tour de ${opp.name}`;
+  renderMultiQuestions(myTurn);
+  renderMultiLog();
+  document.getElementById('multiGuessBtn').disabled = !myTurn;
+  multiGuessSelect.disabled = !myTurn;
+}
+function renderMultiQuestions(myTurn){
+  multiQgrid.innerHTML = '';
+  multiQuestions.forEach((q, idx)=>{
+    const b = document.createElement('button');
+    b.className = 'qbtn';
+    b.textContent = q.text;
+    b.disabled = !myTurn || multiAskedIdx.has(idx);
+    b.addEventListener('click', ()=>askMultiQuestion(idx, q));
+    multiQgrid.appendChild(b);
+  });
+}
+function renderMultiLog(){
+  const entries = roomData.log ? Object.values(roomData.log) : [];
+  multiLog.innerHTML = entries.slice().reverse().map(e=>`<div class="log-item">${e.text}</div>`).join('');
+}
+function askMultiQuestion(idx, q){
+  if(roomData.turn !== myRole) return;
+  multiAskedIdx.add(idx);
+  const oppRole = myRole === 'p1' ? 'p2' : 'p1';
+  const oppSecret = PLAYERS.find(p=>p.id===roomData.players[oppRole].secretId);
+  const answer = q.test(oppSecret);
+  multiAnswerbox.innerHTML = `<span class="badge ${answer?'oui':'non'}">${answer?'Oui':'Non'}</span><span>${q.text}</span>`;
+  const logRef = fbDb.ref(MULTI_ROOM_PREFIX + myRoomCode + '/log').push();
+  logRef.set({ text: `${myName} a demandé « ${q.text} » — ${answer?'Oui':'Non'}` });
+  fbDb.ref(MULTI_ROOM_PREFIX + myRoomCode + '/turn').set(oppRole);
+}
+
+bindTap(document.getElementById('multiGuessBtn'), ()=>{
+  if(!roomData || roomData.turn !== myRole) return;
+  const val = multiGuessSelect.value;
+  if(!val) return;
+  const oppRole = myRole === 'p1' ? 'p2' : 'p1';
+  const oppSecretId = roomData.players[oppRole].secretId;
+  const guessedPlayer = PLAYERS.find(p=>p.id===Number(val));
+  const win = Number(val) === oppSecretId;
+  const logRef = fbDb.ref(MULTI_ROOM_PREFIX + myRoomCode + '/log').push();
+  if(win){
+    logRef.set({ text: `${myName} a deviné correctement : ${guessedPlayer.name} ! 🏆` });
+    fbDb.ref(MULTI_ROOM_PREFIX + myRoomCode).update({ status:'finished', winner: myRole });
+    addCoins(20);
+  } else {
+    logRef.set({ text: `${myName} a proposé ${guessedPlayer.name} — incorrect.` });
+    fbDb.ref(MULTI_ROOM_PREFIX + myRoomCode + '/turn').set(oppRole);
+    addCoins(2);
+  }
+});
+
+document.getElementById('multiLeaveBtn').addEventListener('click', leaveMultiRoom);
+document.getElementById('multiLogToggle').addEventListener('click', ()=>{
+  const open = multiLog.classList.toggle('open');
+  document.getElementById('multiLogToggle').textContent = open ? "Masquer l'historique ▴" : "Voir l'historique ▾";
+});
+function leaveMultiRoom(){
+  if(roomRef) roomRef.off();
+  roomRef = null; roomData = null; myRole = null; myRoomCode = null;
+  multiLobbyError.style.display = 'none';
+  multiJoinCode.value = '';
+  showLobbyView('lobby');
+}
+
+async function init(){
+  await loadRemoteContent();
+  newGame();
+}
+init();
+</script>
+</body>
+</html>
