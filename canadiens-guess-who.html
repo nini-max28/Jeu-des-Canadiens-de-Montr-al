@@ -247,6 +247,9 @@
   .card.selected .front{
     border:2px solid var(--or);
   }
+  .card.just-eliminated .front{
+    box-shadow:0 0 0 3px #3FBF74;
+  }
   .back{
     background:repeating-linear-gradient(45deg, #171C29, #171C29 8px, #1D2434 8px, #1D2434 16px);
     transform:rotateY(180deg);
@@ -861,9 +864,10 @@
 
       <div class="rostertitle">
         <h2>Devine l'adversaire</h2>
-        <span>Choisis dans la liste puis confirme</span>
+        <span>Tape une carte pour l'écarter</span>
       </div>
-      <div style="padding:0 16px;display:flex;gap:8px;">
+      <div class="grid" id="multiGrid"></div>
+      <div style="padding:12px 16px 0;display:flex;gap:8px;">
         <select id="multiGuessSelect" style="flex:1;background:var(--acier-clair);color:var(--texte);border:1px solid #333C54;border-radius:8px;padding:10px 12px;font-size:14px;">
           <option value="">Faire une supposition…</option>
         </select>
@@ -918,7 +922,7 @@ const CURRENT = [
   {id:24,name:"Alexandre Texier",num:85,pos:"AG",posLabel:"Ailier gauche",country:"France",continent:"Europe",captain:null,quebec:false,tall:false,shootsLeft:true,veteran:true,firstRound:false},
   {id:25,name:"Jake Evans",num:71,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:true,firstRound:false},
   {id:26,name:"Phillip Danault",num:24,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:true,tall:true,shootsLeft:true,veteran:true,firstRound:true},
-  {id:27,name:"Florian Xhekaj",num:60,pos:"AG",posLabel:"Ailier gauche",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:true,shootsLeft:true,veteran:false,firstRound:false}
+  {id:27,name:"Florian Xhekaj",num:63,pos:"AG",posLabel:"Ailier gauche",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:true,shootsLeft:true,veteran:false,firstRound:false}
 ].map(p=>({...p, active:true, numberRetired:false, hallOfFame:false, stanleyCup:false, before1980:false, era:"Actif", team:"Canadiens"}));
 
 const LEGENDS = [
@@ -1761,6 +1765,7 @@ let roomData = null;
 let multiQuestions = [];
 let multiAskedIdx = new Set();
 let multiTabInited = false;
+let multiEliminated = new Set();
 
 function generateRoomCode(){
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -1907,8 +1912,48 @@ function renderMultiRoom(){
 
   renderMultiQuestions(myTurn);
   renderMultiLog();
+  renderMultiGrid();
   document.getElementById('multiGuessBtn').disabled = !myTurn;
   multiGuessSelect.disabled = !myTurn;
+}
+
+function renderMultiGrid(){
+  const gridEl2 = document.getElementById('multiGrid');
+  gridEl2.innerHTML = '';
+  multiGuessSelect.innerHTML = '<option value="">Faire une supposition…</option>';
+  DUEL_PLAYERS.forEach(p=>{
+    const card = document.createElement('div');
+    card.className = 'card' + (multiEliminated.has(p.id)?' eliminated':'');
+    card.innerHTML = `
+      <div class="cardface">
+        <div class="front" data-id="${p.id}">
+          <div class="cardbg">${avatarInner(p)}</div>
+          <div class="cardscrim"></div>
+          <span class="era ${p.active?'actif':'legende'}">${p.active?'Actif':'Légende'}</span>
+          <span class="cnum">${p.num}</span>
+          <div class="cardtext">
+            <div class="cname">${p.name}</div>
+            <div class="cpos">${p.posLabel}</div>
+          </div>
+        </div>
+        <div class="back"><span>écarté</span></div>
+      </div>`;
+    card.querySelector('.front').addEventListener('click', ()=>toggleMultiEliminate(p.id));
+    card.querySelector('.back').addEventListener('click', ()=>toggleMultiEliminate(p.id));
+    gridEl2.appendChild(card);
+    if(!multiEliminated.has(p.id)){
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = `#${p.num} ${p.name}`;
+      multiGuessSelect.appendChild(opt);
+    }
+  });
+}
+
+function toggleMultiEliminate(id){
+  if(multiEliminated.has(id)) multiEliminated.delete(id);
+  else multiEliminated.add(id);
+  renderMultiGrid();
 }
 
 function renderMultiQuestions(myTurn){
@@ -1938,6 +1983,25 @@ function askMultiQuestion(idx, q){
   const logRef = fbDb.ref('rooms/' + myRoomCode + '/log').push();
   logRef.set({ text: `${myName} a demandé « ${q.text} » — ${answer?'Oui':'Non'}` });
   fbDb.ref('rooms/' + myRoomCode + '/turn').set(oppRole);
+
+  const newlyEliminated = [];
+  DUEL_PLAYERS.forEach(p=>{
+    if(q.test(p) !== answer && !multiEliminated.has(p.id)){
+      multiEliminated.add(p.id);
+      newlyEliminated.push(p.id);
+    }
+  });
+  renderMultiGrid();
+  newlyEliminated.forEach(id=>{
+    const cardEl = document.querySelector(`#multiGrid .front[data-id="${id}"]`);
+    if(cardEl && cardEl.closest){
+      const card = cardEl.closest('.card');
+      if(card){
+        card.classList.add('just-eliminated');
+        setTimeout(()=> card.classList.remove('just-eliminated'), 1600);
+      }
+    }
+  });
 }
 
 bindTap(document.getElementById('multiGuessBtn'), ()=>{
@@ -1974,6 +2038,8 @@ function leaveMultiRoom(){
   roomData = null;
   myRole = null;
   myRoomCode = null;
+  multiEliminated = new Set();
+  multiAskedIdx = new Set();
   multiLobbyError.style.display = 'none';
   multiJoinCode.value = '';
   showLobbyView('lobby');
