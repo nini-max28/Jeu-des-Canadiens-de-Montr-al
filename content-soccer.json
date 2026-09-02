@@ -1,0 +1,125 @@
+{
+  "players": [
+    {
+      "id": 1,
+      "name": "Lionel Messi",
+      "photo": ""
+    },
+    {
+      "id": 2,
+      "name": "Cristiano Ronaldo",
+      "photo": ""
+    },
+    {
+      "id": 3,
+      "name": "Kylian Mbappé",
+      "photo": ""
+    },
+    {
+      "id": 4,
+      "name": "Erling Haaland",
+      "photo": ""
+    },
+    {
+      "id": 5,
+      "name": "Kevin De Bruyne",
+      "photo": ""
+    },
+    {
+      "id": 6,
+      "name": "Vinícius Júnior",
+      "photo": ""
+    },
+    {
+      "id": 7,
+      "name": "Jude Bellingham",
+      "photo": ""
+    },
+    {
+      "id": 8,
+      "name": "Mohamed Salah",
+      "photo": ""
+    },
+    {
+      "id": 9,
+      "name": "Harry Kane",
+      "photo": ""
+    },
+    {
+      "id": 10,
+      "name": "Virgil van Dijk",
+      "photo": ""
+    },
+    {
+      "id": 11,
+      "name": "Alphonso Davies",
+      "photo": ""
+    },
+    {
+      "id": 12,
+      "name": "Neymar Jr",
+      "photo": ""
+    },
+    {
+      "id": 13,
+      "name": "Luka Modrić",
+      "photo": ""
+    },
+    {
+      "id": 14,
+      "name": "Robert Lewandowski",
+      "photo": ""
+    },
+    {
+      "id": 15,
+      "name": "Thibaut Courtois",
+      "photo": ""
+    },
+    {
+      "id": 16,
+      "name": "Alisson Becker",
+      "photo": ""
+    },
+    {
+      "id": 101,
+      "name": "Pelé",
+      "photo": ""
+    },
+    {
+      "id": 102,
+      "name": "Diego Maradona",
+      "photo": ""
+    },
+    {
+      "id": 103,
+      "name": "Johan Cruyff",
+      "photo": ""
+    },
+    {
+      "id": 104,
+      "name": "Zinédine Zidane",
+      "photo": ""
+    },
+    {
+      "id": 105,
+      "name": "Ronaldinho",
+      "photo": ""
+    },
+    {
+      "id": 106,
+      "name": "David Beckham",
+      "photo": ""
+    },
+    {
+      "id": 107,
+      "name": "Franz Beckenbauer",
+      "photo": ""
+    },
+    {
+      "id": 108,
+      "name": "Ronaldo Nazário",
+      "photo": ""
+    }
+  ],
+  "questions": []
+}

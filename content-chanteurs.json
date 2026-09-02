@@ -1,0 +1,155 @@
+{
+  "players": [
+    {
+      "id": 1,
+      "name": "Michael Jackson",
+      "photo": ""
+    },
+    {
+      "id": 2,
+      "name": "Beyoncé",
+      "photo": ""
+    },
+    {
+      "id": 3,
+      "name": "Elton John",
+      "photo": ""
+    },
+    {
+      "id": 4,
+      "name": "Adele",
+      "photo": ""
+    },
+    {
+      "id": 5,
+      "name": "Whitney Houston",
+      "photo": ""
+    },
+    {
+      "id": 6,
+      "name": "Ed Sheeran",
+      "photo": ""
+    },
+    {
+      "id": 7,
+      "name": "Rihanna",
+      "photo": ""
+    },
+    {
+      "id": 8,
+      "name": "Freddie Mercury",
+      "photo": ""
+    },
+    {
+      "id": 9,
+      "name": "Taylor Swift",
+      "photo": ""
+    },
+    {
+      "id": 10,
+      "name": "Elvis Presley",
+      "photo": ""
+    },
+    {
+      "id": 11,
+      "name": "Céline Dion",
+      "photo": ""
+    },
+    {
+      "id": 12,
+      "name": "Charles Aznavour",
+      "photo": ""
+    },
+    {
+      "id": 13,
+      "name": "Édith Piaf",
+      "photo": ""
+    },
+    {
+      "id": 14,
+      "name": "Garou",
+      "photo": ""
+    },
+    {
+      "id": 15,
+      "name": "Ginette Reno",
+      "photo": ""
+    },
+    {
+      "id": 16,
+      "name": "Stromae",
+      "photo": ""
+    },
+    {
+      "id": 17,
+      "name": "Zaz",
+      "photo": ""
+    },
+    {
+      "id": 18,
+      "name": "Cœur de Pirate",
+      "photo": ""
+    },
+    {
+      "id": 19,
+      "name": "Roch Voisine",
+      "photo": ""
+    },
+    {
+      "id": 20,
+      "name": "Gilles Vigneault",
+      "photo": ""
+    },
+    {
+      "id": 401,
+      "name": "The Beatles",
+      "photo": ""
+    },
+    {
+      "id": 402,
+      "name": "Queen",
+      "photo": ""
+    },
+    {
+      "id": 403,
+      "name": "ABBA",
+      "photo": ""
+    },
+    {
+      "id": 404,
+      "name": "Coldplay",
+      "photo": ""
+    },
+    {
+      "id": 405,
+      "name": "Fleetwood Mac",
+      "photo": ""
+    },
+    {
+      "id": 406,
+      "name": "Beau Dommage",
+      "photo": ""
+    },
+    {
+      "id": 407,
+      "name": "Les Cowboys Fringants",
+      "photo": ""
+    },
+    {
+      "id": 408,
+      "name": "Indochine",
+      "photo": ""
+    },
+    {
+      "id": 409,
+      "name": "Les Trois Accords",
+      "photo": ""
+    },
+    {
+      "id": 410,
+      "name": "Mes Aïeux",
+      "photo": ""
+    }
+  ],
+  "questions": []
+}
