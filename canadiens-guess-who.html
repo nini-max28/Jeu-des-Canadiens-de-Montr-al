@@ -428,6 +428,30 @@
     margin:12px 0 0;
   }
 
+  .suggestlist{
+    position:absolute;
+    left:16px;right:16px;
+    top:calc(100% + 2px);
+    background:var(--acier-clair);
+    border:1px solid #333C54;
+    border-radius:10px;
+    max-height:220px;
+    overflow-y:auto;
+    z-index:15;
+    box-shadow:0 10px 24px rgba(0,0,0,0.4);
+  }
+  .suggestitem{
+    padding:10px 14px;
+    font-size:14px;
+    color:var(--texte);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .suggestitem:active{background:var(--bleu-clair);}
+  .suggestitem .avatar{width:28px;height:28px;border-radius:6px;flex-shrink:0;font-size:11px;}
+
   .levelcard{
     background:var(--bleu);
     border-radius:14px;
@@ -459,6 +483,32 @@
     border-radius:999px;
     transition:width .3s ease;
   }
+
+  /* ---------- Quiz ---------- */
+  .catgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+  .cattile{background:var(--acier);border:2px solid transparent;border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;font-size:13px;font-weight:700;color:#9FA9C4;}
+  .cattile.active{border-color:var(--or);color:var(--glace);background:rgba(217,164,65,0.1);}
+  .cattile .caticon{font-size:20px;display:block;margin-bottom:4px;}
+
+  .answerbtn{border:none;border-radius:12px;padding:18px 10px;font-size:14px;font-weight:800;color:#fff;cursor:pointer;text-align:center;min-height:64px;display:flex;align-items:center;justify-content:center;}
+  .answerbtn:active{transform:scale(0.96);}
+  .answerbtn.a{background:#E74C3C;}
+  .answerbtn.b{background:#2980B9;}
+  .answerbtn.c{background:#D4A80B;color:#2a2107;}
+  .answerbtn.d{background:#27AE60;}
+  .answerbtn.correct{outline:3px solid #fff;}
+  .answerbtn.wrong{opacity:.35;}
+  .answerbtn:disabled{cursor:default;}
+
+  .leaderrow{background:var(--acier);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;font-size:15px;margin-bottom:8px;}
+  .leaderrow.first{background:linear-gradient(90deg, rgba(217,164,65,0.25), rgba(217,164,65,0.05));border:1px solid rgba(217,164,65,0.4);}
+  .leaderrow .rank{font-weight:900;color:var(--or);width:28px;}
+  .leaderrow .lname{flex:1;font-weight:700;}
+  .leaderrow .lscore{font-weight:800;color:var(--or);}
+
+  .playerlist{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+  .playerrow{background:var(--acier);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;font-size:14px;}
+  .hostbadge{font-size:10px;background:rgba(217,164,65,0.2);color:var(--or);padding:2px 7px;border-radius:999px;margin-left:6px;}
 
   /* ---------- Solo silhouette ---------- */
   .silhouettewrap{padding:20px 16px 0;}
@@ -652,6 +702,7 @@
     <button class="tabbtn active" id="tabDuel">Face à face</button>
     <button class="tabbtn" id="tabSolo">Solo</button>
     <button class="tabbtn" id="tabLevels">Niveaux</button>
+    <button class="tabbtn" id="tabQuiz">Quiz</button>
     <button class="tabbtn" id="tabMulti">En ligne</button>
   </div>
 
@@ -808,6 +859,115 @@
     </div>
   </div>
 
+  <div id="quizMode" style="display:none;">
+    <div id="hqNoConfig" class="panel" style="display:none;margin:22px 16px 0;">
+      <h2>Configuration requise</h2>
+      <p class="sub">Le quiz a besoin d'un projet Firebase gratuit pour synchroniser les appareils.</p>
+    </div>
+
+    <div id="hqLobbyView">
+      <section class="panel">
+        <h2>Quiz du Tricolore</h2>
+        <p class="sub">Une personne crée la partie (l'hôte), les autres rejoignent avec le code.</p>
+        <input type="text" id="hqNameInput" placeholder="Ton prénom" autocomplete="off"
+          style="width:100%;background:var(--acier);color:var(--texte);border:1px solid #333C54;border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:10px;">
+        <label class="imgtoggle" style="padding:0 0 14px;">
+          <input type="checkbox" id="hqYoungChildToggle">
+          <span>C'est un enfant plus jeune (recevra les questions en premier)</span>
+        </label>
+        <button class="btn btn-primary" id="hqCreateBtn" style="width:100%;margin-bottom:14px;">Créer une partie (hôte)</button>
+        <div class="centerline" style="max-width:100%;margin:6px 0 14px;"></div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="hqJoinCodeInput" placeholder="Code à 4 lettres" autocomplete="off" maxlength="4"
+            style="flex:1;text-transform:uppercase;background:var(--acier);color:var(--texte);border:1px solid #333C54;border-radius:8px;padding:10px 12px;font-size:14px;">
+          <button class="btn btn-primary" id="hqJoinBtn">Rejoindre</button>
+        </div>
+        <p id="hqLobbyError" style="display:none;color:#F5C6CB;font-size:12.5px;margin:10px 0 0;"></p>
+      </section>
+    </div>
+
+    <div id="hqWaitingView" style="display:none;">
+      <section class="panel" style="text-align:center;">
+        <h2>Salle d'attente</h2>
+        <p class="sub">Code de la partie :</p>
+        <div class="roomcode" id="hqRoomCodeDisplay">----</div>
+        <div class="playerlist" id="hqWaitingPlayerList"></div>
+      </section>
+
+      <section class="panel" id="hqHostConfigPanel" style="display:none;">
+        <h2>Catégories</h2>
+        <p class="sub">Choisis un ou plusieurs thèmes, ou laisse tout coché pour un mélange.</p>
+        <div class="catgrid" id="hqCatGrid"></div>
+
+        <h2 style="margin-top:18px;">Difficulté</h2>
+        <div class="tabs" style="padding:0;margin-top:0;">
+          <button class="tabbtn hqdiffbtn active" data-diff="mixte">Mélange</button>
+          <button class="tabbtn hqdiffbtn" data-diff="facile">Facile</button>
+          <button class="tabbtn hqdiffbtn" data-diff="normal">Normal</button>
+          <button class="tabbtn hqdiffbtn" data-diff="difficile">Difficile</button>
+        </div>
+
+        <label class="imgtoggle" style="padding-top:16px;">
+          <input type="checkbox" id="hqReadAloudToggle">
+          <span>Lire les questions à voix haute</span>
+        </label>
+
+        <div id="hqHeadstartConfig" style="display:none;margin-top:18px;">
+          <h2>Longueur d'avance pour les plus jeunes</h2>
+          <div class="tabs" style="padding:0;margin-top:0;">
+            <button class="tabbtn hqhsbtn" data-hs="0">Aucune</button>
+            <button class="tabbtn hqhsbtn active" data-hs="5">5 s</button>
+            <button class="tabbtn hqhsbtn" data-hs="8">8 s</button>
+            <button class="tabbtn hqhsbtn" data-hs="12">12 s</button>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="hqStartBtn" style="width:100%;margin-top:16px;">Démarrer la partie</button>
+      </section>
+
+      <section class="panel" style="text-align:center;">
+        <p class="sub" id="hqWaitingForHostText" style="display:none;margin:0;">En attente que l'hôte démarre la partie…</p>
+        <button class="btn btn-ghost" id="hqLeaveLobbyBtn" style="margin-top:10px;">Quitter</button>
+      </section>
+    </div>
+
+    <div id="hqQuestionView" style="display:none;">
+      <div id="hqHeadstartWait" style="text-align:center;padding:30px 16px;color:#9FA9C4;">
+        <div style="font-size:32px;margin-bottom:8px;">🐣</div>
+        <p id="hqHeadstartText">Un instant… un joueur plus jeune répond en premier.</p>
+      </div>
+      <div id="hqQuestionContent">
+        <div style="text-align:center;font-size:13px;color:#9FA9C4;margin-top:10px;" id="hqQCounter">Question 1/12</div>
+        <div style="text-align:center;font-size:20px;font-weight:800;color:var(--glace);margin:10px 16px 0;line-height:1.3;" id="hqQText">…</div>
+        <div style="text-align:center;"><button style="background:none;border:none;color:var(--or);font-size:22px;cursor:pointer;padding:4px;" id="hqSpeakBtn">🔊</button></div>
+        <div style="height:8px;background:var(--acier-clair);border-radius:999px;margin:16px 16px 0;overflow:hidden;">
+          <div style="height:100%;background:linear-gradient(90deg, var(--or), var(--rouge));border-radius:999px;transition:width .1s linear;width:100%;" id="hqTimerFill"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px;" id="hqAnswersGrid"></div>
+        <div id="hqAnsweredWait" style="display:none;text-align:center;padding:20px 16px;color:#9FA9C4;">En attente des autres joueurs…</div>
+      </div>
+    </div>
+
+    <div id="hqResultView" style="display:none;">
+      <div class="panel" id="hqResultBox" style="text-align:center;">
+        <h3 id="hqResultTitle" style="margin:0 0 6px;font-size:22px;">Bonne réponse! ✅</h3>
+        <p id="hqResultSub" style="margin:0;color:#9FA9C4;font-size:13.5px;">+150 points</p>
+      </div>
+      <div class="playerlist" id="hqLiveScores" style="padding:0 16px;"></div>
+      <section class="panel" id="hqHostNextPanel" style="display:none;text-align:center;">
+        <button class="btn btn-primary" id="hqNextBtn" style="width:100%;">Question suivante</button>
+      </section>
+    </div>
+
+    <div id="hqFinalView" style="display:none;">
+      <section class="panel">
+        <h2 style="text-align:center;font-size:22px;">Résultats finaux 🏆</h2>
+        <div id="hqFinalLeaderboard" style="margin-top:14px;"></div>
+        <button class="btn btn-primary" id="hqPlayAgainBtn" style="width:100%;margin-top:14px;">Nouvelle partie</button>
+      </section>
+    </div>
+  </div>
+
   <div id="multiMode" style="display:none;">
     <div id="multiNoConfig" class="panel" style="display:none;margin:22px 16px 0;">
       <h2>Configuration requise</h2>
@@ -867,11 +1027,14 @@
         <span>Tape une carte pour l'écarter</span>
       </div>
       <div class="grid" id="multiGrid"></div>
-      <div style="padding:12px 16px 0;display:flex;gap:8px;">
-        <select id="multiGuessSelect" style="flex:1;background:var(--acier-clair);color:var(--texte);border:1px solid #333C54;border-radius:8px;padding:10px 12px;font-size:14px;">
-          <option value="">Faire une supposition…</option>
-        </select>
-        <button class="btn btn-primary" id="multiGuessBtn">Deviner</button>
+      <div style="padding:12px 16px 0;position:relative;">
+        <div style="display:flex;gap:8px;">
+          <input id="multiGuessInput" placeholder="Nom du joueur…" autocomplete="off"
+            style="flex:1;background:var(--acier-clair);color:var(--texte);border:1px solid #333C54;border-radius:8px;padding:10px 12px;font-size:14px;">
+          <button class="btn btn-primary" id="multiGuessBtn">Deviner</button>
+        </div>
+        <div id="multiGuessSuggestions" class="suggestlist" style="display:none;"></div>
+        <p id="multiGuessError" style="display:none;color:#F5C6CB;font-size:12.5px;margin:8px 0 0;"></p>
       </div>
     </div>
   </div>
@@ -912,7 +1075,7 @@ const CURRENT = [
   {id:14,name:"Alexandre Carrier",num:45,pos:"D",posLabel:"Défenseur",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:true,tall:false,shootsLeft:false,veteran:true,firstRound:false},
   {id:15,name:"Ivan Demidov",num:93,pos:"AD",posLabel:"Ailier droit",country:"Russie",continent:"Europe",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:false,firstRound:true},
   {id:16,name:"Zachary Bolduc",num:76,pos:"AG",posLabel:"Ailier gauche",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:true,tall:false,shootsLeft:true,veteran:false,firstRound:true},
-  {id:17,name:"Oliver Kapanen",num:25,pos:"C",posLabel:"Centre",country:"Finlande",continent:"Europe",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:false,firstRound:false},
+  {id:17,name:"Oliver Kapanen",num:91,pos:"C",posLabel:"Centre",country:"Finlande",continent:"Europe",captain:null,quebec:false,tall:false,shootsLeft:false,veteran:false,firstRound:false},
   {id:18,name:"Alex Newhook",num:15,pos:"C",posLabel:"Centre",country:"Canada",continent:"Amérique du Nord",captain:null,quebec:false,tall:false,shootsLeft:true,veteran:true,firstRound:true},
   {id:19,name:"David Reinbacher",num:64,pos:"D",posLabel:"Défenseur",country:"Autriche",continent:"Europe",captain:null,quebec:false,tall:true,shootsLeft:false,veteran:false,firstRound:true},
   {id:20,name:"Patrik Laine",num:92,pos:"AD",posLabel:"Ailier droit",country:"Finlande",continent:"Europe",captain:null,quebec:false,tall:true,shootsLeft:false,veteran:true,firstRound:true},
@@ -1378,31 +1541,37 @@ function newGame(){
 const tabDuel = document.getElementById('tabDuel');
 const tabSolo = document.getElementById('tabSolo');
 const tabLevels = document.getElementById('tabLevels');
+const tabQuiz = document.getElementById('tabQuiz');
 const tabMulti = document.getElementById('tabMulti');
 const duelMode = document.getElementById('duelMode');
 const soloModeEl = document.getElementById('soloMode');
 const levelsModeEl = document.getElementById('levelsMode');
+const quizModeEl = document.getElementById('quizMode');
 const multiModeEl = document.getElementById('multiMode');
 const duelGuessbar = document.getElementById('duelGuessbar');
 
 tabDuel.addEventListener('click', ()=>switchTab('duel'));
 tabSolo.addEventListener('click', ()=>switchTab('solo'));
 tabLevels.addEventListener('click', ()=>switchTab('levels'));
+tabQuiz.addEventListener('click', ()=>switchTab('quiz'));
 tabMulti.addEventListener('click', ()=>switchTab('multi'));
 
 function switchTab(mode){
   tabDuel.classList.toggle('active', mode==='duel');
   tabSolo.classList.toggle('active', mode==='solo');
   tabLevels.classList.toggle('active', mode==='levels');
+  tabQuiz.classList.toggle('active', mode==='quiz');
   tabMulti.classList.toggle('active', mode==='multi');
   duelMode.style.display = mode==='duel' ? '' : 'none';
   soloModeEl.style.display = mode==='solo' ? '' : 'none';
   levelsModeEl.style.display = mode==='levels' ? '' : 'none';
+  quizModeEl.style.display = mode==='quiz' ? '' : 'none';
   multiModeEl.style.display = mode==='multi' ? '' : 'none';
   duelGuessbar.style.display = mode==='duel' ? '' : 'none';
   if(mode==='solo' && !soloSecret) newSoloGame();
   if(mode==='multi') initMultiTab();
   if(mode==='levels') renderLevelsList();
+  if(mode==='quiz' && !multiConfigured) document.getElementById('hqNoConfig').style.display = 'block';
 }
 
 /* ---------- Solo mode: silhouette + guesses ---------- */
@@ -1755,7 +1924,9 @@ const multiMySecret = document.getElementById('multiMySecret');
 const multiQgrid = document.getElementById('multiQgrid');
 const multiAnswerbox = document.getElementById('multiAnswerbox');
 const multiLog = document.getElementById('multiLog');
-const multiGuessSelect = document.getElementById('multiGuessSelect');
+const multiGuessInput = document.getElementById('multiGuessInput');
+const multiGuessSuggestions = document.getElementById('multiGuessSuggestions');
+const multiGuessError = document.getElementById('multiGuessError');
 
 let myRole = null;
 let myRoomCode = null;
@@ -1781,15 +1952,7 @@ function initMultiTab(){
     return;
   }
   multiNoConfig.style.display = 'none';
-  if(!multiTabInited){
-    populateMultiGuessSelect();
-    multiTabInited = true;
-  }
-}
-
-function populateMultiGuessSelect(){
-  multiGuessSelect.innerHTML = '<option value="">Faire une supposition…</option>' +
-    PLAYERS.map(p=>`<option value="${p.id}">#${p.num} ${p.name}</option>`).join('');
+  multiTabInited = true;
 }
 
 function showLobbyView(view){
@@ -1914,13 +2077,13 @@ function renderMultiRoom(){
   renderMultiLog();
   renderMultiGrid();
   document.getElementById('multiGuessBtn').disabled = !myTurn;
-  multiGuessSelect.disabled = !myTurn;
+  multiGuessInput.disabled = !myTurn;
+  document.getElementById('multiGuessBtn').disabled = !myTurn;
 }
 
 function renderMultiGrid(){
   const gridEl2 = document.getElementById('multiGrid');
   gridEl2.innerHTML = '';
-  multiGuessSelect.innerHTML = '<option value="">Faire une supposition…</option>';
   DUEL_PLAYERS.forEach(p=>{
     const card = document.createElement('div');
     card.className = 'card' + (multiEliminated.has(p.id)?' eliminated':'');
@@ -1941,14 +2104,35 @@ function renderMultiGrid(){
     card.querySelector('.front').addEventListener('click', ()=>toggleMultiEliminate(p.id));
     card.querySelector('.back').addEventListener('click', ()=>toggleMultiEliminate(p.id));
     gridEl2.appendChild(card);
-    if(!multiEliminated.has(p.id)){
-      const opt = document.createElement('option');
-      opt.value = p.id;
-      opt.textContent = `#${p.num} ${p.name}`;
-      multiGuessSelect.appendChild(opt);
-    }
   });
 }
+
+function renderMultiSuggestions(){
+  const raw = multiGuessInput.value.trim().toLowerCase();
+  if(!raw){ multiGuessSuggestions.style.display = 'none'; return; }
+  const matches = DUEL_PLAYERS.filter(p=> p.name.toLowerCase().includes(raw) && !multiEliminated.has(p.id)).slice(0, 8);
+  if(matches.length === 0){ multiGuessSuggestions.style.display = 'none'; return; }
+  multiGuessSuggestions.innerHTML = matches.map(p=>`
+    <div class="suggestitem" data-id="${p.id}">
+      <div class="avatar">${avatarInner(p)}</div>
+      <span>#${p.num} ${p.name}</span>
+    </div>`).join('');
+  multiGuessSuggestions.style.display = 'block';
+  multiGuessSuggestions.querySelectorAll('.suggestitem').forEach(el=>{
+    bindTap(el, ()=>{
+      const p = DUEL_PLAYERS.find(pl=>pl.id===Number(el.dataset.id));
+      multiGuessInput.value = p.name;
+      multiGuessSuggestions.style.display = 'none';
+    });
+  });
+}
+multiGuessInput.addEventListener('input', renderMultiSuggestions);
+multiGuessInput.addEventListener('focus', renderMultiSuggestions);
+document.addEventListener('click', (e)=>{
+  if(e.target !== multiGuessInput && !multiGuessSuggestions.contains(e.target)){
+    multiGuessSuggestions.style.display = 'none';
+  }
+});
 
 function toggleMultiEliminate(id){
   if(multiEliminated.has(id)) multiEliminated.delete(id);
@@ -2005,13 +2189,30 @@ function askMultiQuestion(idx, q){
 }
 
 bindTap(document.getElementById('multiGuessBtn'), ()=>{
-  if(!roomData || roomData.turn !== myRole) return;
-  const val = multiGuessSelect.value;
-  if(!val) return;
+  multiGuessError.style.display = 'none';
+  if(!roomData || roomData.turn !== myRole){
+    multiGuessError.textContent = "Ce n'est pas encore ton tour.";
+    multiGuessError.style.display = 'block';
+    return;
+  }
+  const raw = multiGuessInput.value.trim();
+  if(!raw){
+    multiGuessError.textContent = 'Écris un nom avant de deviner.';
+    multiGuessError.style.display = 'block';
+    return;
+  }
+  const guessedPlayer = DUEL_PLAYERS.find(p=>p.name.toLowerCase() === raw.toLowerCase());
+  if(!guessedPlayer){
+    multiGuessError.textContent = `« ${raw} » ne correspond à aucun joueur de la liste.`;
+    multiGuessError.style.display = 'block';
+    return;
+  }
+  multiGuessSuggestions.style.display = 'none';
+  multiGuessInput.value = '';
+
   const oppRole = myRole === 'p1' ? 'p2' : 'p1';
   const oppSecretId = roomData.players[oppRole].secretId;
-  const guessedPlayer = PLAYERS.find(p=>p.id===Number(val));
-  const win = Number(val) === oppSecretId;
+  const win = guessedPlayer.id === oppSecretId;
   const logRef = fbDb.ref('rooms/' + myRoomCode + '/log').push();
 
   if(win){
@@ -2385,6 +2586,381 @@ function finishLevel(){
     : `Tu as trouvé tout le monde dans ${LEVELS[currentLevelIndex].name} — c'était le dernier niveau! +25 pièces`;
 }
 document.getElementById('lvlContinueBtn').addEventListener('click', renderLevelsList);
+
+/* ---------- Quiz du Tricolore: real-time multiplayer trivia ---------- */
+const HQ_CATEGORIES = {
+  regles:   {label:'Règles',      icon:'📋'},
+  histoire: {label:'Histoire',    icon:'🏛️'},
+  records:  {label:'Records',     icon:'🏆'},
+  equip:    {label:'Équipement',  icon:'🥅'}
+};
+
+const HQ_QUESTIONS = [
+  {q:"Combien de joueurs par équipe sont sur la glace (gardien inclus)?", a:["5","6","7","8"], correct:1, category:'regles', difficulty:'facile'},
+  {q:"Combien de périodes y a-t-il dans un match de hockey?", a:["2","3","4","5"], correct:1, category:'regles', difficulty:'facile'},
+  {q:"Combien de minutes dure une période au hockey professionnel?", a:["15","20","25","30"], correct:1, category:'regles', difficulty:'normal'},
+  {q:"Combien de temps dure une punition mineure standard?", a:["1 minute","2 minutes","5 minutes","10 minutes"], correct:1, category:'regles', difficulty:'normal'},
+  {q:"Comment appelle-t-on une punition de 5 minutes pour un combat?", a:["Mineure","Majeure","De match","De banc"], correct:1, category:'regles', difficulty:'difficile'},
+  {q:"Quel objet les joueurs tentent-ils de faire entrer dans le but?", a:["Ballon","Rondelle","Balle","Anneau"], correct:1, category:'regles', difficulty:'facile'},
+  {q:"Combien de zones y a-t-il sur une patinoire (défensive, neutre, offensive)?", a:["2","3","4","5"], correct:1, category:'regles', difficulty:'facile'},
+  {q:"Combien de temps dure la prolongation à 3 contre 3 en saison régulière?", a:["3 minutes","5 minutes","10 minutes","20 minutes"], correct:1, category:'regles', difficulty:'difficile'},
+
+  {q:"En quelle année les Canadiens de Montréal ont-ils été fondés?", a:["1901","1909","1917","1925"], correct:1, category:'histoire', difficulty:'normal'},
+  {q:"Dans quelle ligue jouent les Canadiens de Montréal?", a:["LHJMQ","AHL","LNH","ECHL"], correct:2, category:'histoire', difficulty:'facile'},
+  {q:"Comment s'appelle l'aréna actuel des Canadiens?", a:["Forum de Montréal","Centre Bell","Centre Vidéotron","Centre Rogers"], correct:1, category:'histoire', difficulty:'facile'},
+  {q:"Quel est le surnom donné aux Canadiens de Montréal?", a:["Les Rouges","Le Tricolore","Les Bleus","Les Nordiques"], correct:1, category:'histoire', difficulty:'normal'},
+  {q:"En quelle année les Canadiens ont-ils rejoint la LNH?", a:["1909","1917","1925","1933"], correct:1, category:'histoire', difficulty:'difficile'},
+  {q:"Où jouaient les Canadiens avant le Centre Bell?", a:["Stade Olympique","Forum de Montréal","Colisée de Québec","Aréna Maurice-Richard"], correct:1, category:'histoire', difficulty:'difficile'},
+  {q:"Quelles sont les couleurs du chandail des Canadiens?", a:["Bleu et blanc","Rouge, blanc et bleu","Vert et blanc","Noir et or"], correct:1, category:'histoire', difficulty:'facile'},
+
+  {q:"Combien de fois les Canadiens ont-ils remporté la Coupe Stanley?", a:["13","18","24","30"], correct:2, category:'records', difficulty:'normal'},
+  {q:"Quelle équipe a le deuxième plus de Coupes Stanley après les Canadiens?", a:["Bruins de Boston","Maple Leafs de Toronto","Red Wings de Détroit","Rangers de New York"], correct:1, category:'records', difficulty:'difficile'},
+  {q:"Comment appelle-t-on 3 buts marqués par un même joueur dans un match?", a:["Triplé","Tour du chapeau","Grand chelem","Combo"], correct:1, category:'records', difficulty:'facile'},
+  {q:"En quelle année les Canadiens ont-ils remporté leur première Coupe Stanley?", a:["1909","1916","1930","1953"], correct:1, category:'records', difficulty:'difficile'},
+  {q:"Quel joueur des Canadiens a été le premier à marquer 50 buts en 50 matchs?", a:["Guy Lafleur","Maurice Richard","Jean Béliveau","Patrick Roy"], correct:1, category:'records', difficulty:'normal'},
+
+  {q:"Quel équipement protège la tête d'un joueur?", a:["Visière","Casque","Épaulettes","Coquille"], correct:1, category:'equip', difficulty:'facile'},
+  {q:"Combien de lames a un patin de hockey?", a:["0","1","2","3"], correct:1, category:'equip', difficulty:'facile'},
+  {q:"Comment appelle-t-on le protecteur qui couvre les jambes du gardien?", a:["Mitaine","Plastron","Jambières","Masque"], correct:2, category:'equip', difficulty:'normal'},
+  {q:"De quelle matière est faite une rondelle de hockey?", a:["Plastique","Bois","Caoutchouc vulcanisé","Métal"], correct:2, category:'equip', difficulty:'normal'},
+  {q:"Quel équipement le gardien utilise-t-il pour attraper la rondelle?", a:["Bâton","Mitaine","Jambières","Masque"], correct:1, category:'equip', difficulty:'facile'},
+  {q:"En quelle matière sont fabriqués la plupart des bâtons de hockey modernes?", a:["Bois seulement","Fibre de carbone","Métal","Plastique rigide"], correct:1, category:'equip', difficulty:'difficile'}
+];
+const HQ_QUESTION_TIME_MS = 12000;
+const HQ_ROOM_PREFIX = "hockeyQuizRooms/";
+
+let hqPlayerId = null;
+let hqRoomCode = null;
+let hqName = '';
+let hqAmHost = false;
+let hqRoomRef = null;
+let hqRoomData = null;
+let hqHasAnsweredCurrent = false;
+let hqQuestionTimer = null;
+let hqIsYoungChild = false;
+let hqSelectedHeadstartSeconds = 5;
+let hqRevealTime = 0;
+let hqHeadstartTimer = null;
+let hqLastRenderedQuestion = -1;
+let hqLastRevealedQuestion = -1;
+let hqSelectedCategories = new Set(Object.keys(HQ_CATEGORIES));
+let hqSelectedDifficulty = 'mixte';
+let hqReadAloudEnabled = false;
+
+function hqGenCode(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let c=''; for(let i=0;i<4;i++) c+=chars[Math.floor(Math.random()*chars.length)];
+  return c;
+}
+function hqGenPlayerId(){ return 'q' + Math.random().toString(36).slice(2,10); }
+
+const hqLobbyView = document.getElementById('hqLobbyView');
+const hqWaitingView = document.getElementById('hqWaitingView');
+const hqQuestionView = document.getElementById('hqQuestionView');
+const hqResultView = document.getElementById('hqResultView');
+const hqFinalView = document.getElementById('hqFinalView');
+
+function hqShowView(v){
+  hqLobbyView.style.display = v==='lobby' ? '' : 'none';
+  hqWaitingView.style.display = v==='waiting' ? '' : 'none';
+  hqQuestionView.style.display = v==='question' ? '' : 'none';
+  hqResultView.style.display = v==='result' ? '' : 'none';
+  hqFinalView.style.display = v==='final' ? '' : 'none';
+}
+
+document.getElementById('hqCreateBtn').addEventListener('click', ()=>{
+  if(!multiConfigured){ document.getElementById('hqNoConfig').style.display = 'block'; return; }
+  hqName = document.getElementById('hqNameInput').value.trim() || 'Hôte';
+  hqIsYoungChild = document.getElementById('hqYoungChildToggle').checked;
+  hqPlayerId = hqGenPlayerId();
+  hqRoomCode = hqGenCode();
+  hqAmHost = true;
+  fbDb.ref(HQ_ROOM_PREFIX + hqRoomCode).set({
+    status: 'lobby',
+    hostId: hqPlayerId,
+    currentQuestion: 0,
+    questionStartedAt: 0,
+    questionOrder: [],
+    headStartMs: 0,
+    players: { [hqPlayerId]: { name: hqName, score: 0, isYoungChild: hqIsYoungChild } },
+    createdAt: firebase.database.ServerValue.TIMESTAMP
+  }).then(()=>{
+    document.getElementById('hqRoomCodeDisplay').textContent = hqRoomCode;
+    hqAttachListener();
+  });
+});
+
+document.getElementById('hqJoinBtn').addEventListener('click', ()=>{
+  if(!multiConfigured){ document.getElementById('hqNoConfig').style.display = 'block'; return; }
+  const code = document.getElementById('hqJoinCodeInput').value.trim().toUpperCase();
+  hqName = document.getElementById('hqNameInput').value.trim() || 'Joueur';
+  hqIsYoungChild = document.getElementById('hqYoungChildToggle').checked;
+  const err = document.getElementById('hqLobbyError');
+  err.style.display = 'none';
+  if(code.length !== 4){ err.textContent = 'Entre le code à 4 lettres.'; err.style.display = 'block'; return; }
+  hqPlayerId = hqGenPlayerId();
+  const ref = fbDb.ref(HQ_ROOM_PREFIX + code);
+  ref.get().then(snap=>{
+    const data = snap.val();
+    if(!data){ err.textContent = 'Aucune partie trouvée avec ce code.'; err.style.display = 'block'; return; }
+    if(data.status !== 'lobby'){ err.textContent = 'Cette partie est déjà commencée.'; err.style.display = 'block'; return; }
+    hqRoomCode = code;
+    hqAmHost = false;
+    ref.child('players/' + hqPlayerId).set({ name: hqName, score: 0, isYoungChild: hqIsYoungChild }).then(()=>{ hqAttachListener(); });
+  }).catch(()=>{ err.textContent = 'Impossible de rejoindre.'; err.style.display = 'block'; });
+});
+
+function hqAttachListener(){
+  hqRoomRef = fbDb.ref(HQ_ROOM_PREFIX + hqRoomCode);
+  hqRoomRef.on('value', snap=>{
+    hqRoomData = snap.val();
+    if(!hqRoomData){ hqLeaveRoom(); return; }
+    hqRender();
+  });
+}
+
+function hqRender(){
+  if(hqRoomData.status === 'lobby'){ hqRenderLobby(); return; }
+  if(hqRoomData.status === 'playing'){ hqRenderQuestion(); return; }
+  if(hqRoomData.status === 'finished'){ hqRenderFinal(); return; }
+}
+
+function hqRenderLobby(){
+  hqShowView('waiting');
+  document.getElementById('hqRoomCodeDisplay').textContent = hqRoomCode;
+  const players = hqRoomData.players || {};
+  const list = document.getElementById('hqWaitingPlayerList');
+  list.innerHTML = Object.entries(players).map(([pid,p])=>`
+    <div class="playerrow">
+      <span class="pname">${p.name}${pid===hqRoomData.hostId?'<span class="hostbadge">HÔTE</span>':''}${p.isYoungChild?' 🐣':''}</span>
+    </div>`).join('');
+  document.getElementById('hqHostConfigPanel').style.display = hqAmHost ? '' : 'none';
+  document.getElementById('hqWaitingForHostText').style.display = hqAmHost ? 'none' : '';
+  const anyYoungChild = Object.values(players).some(p=>p.isYoungChild);
+  document.getElementById('hqHeadstartConfig').style.display = (hqAmHost && anyYoungChild) ? '' : 'none';
+  if(hqAmHost) hqRenderCategoryGrid();
+}
+
+function hqRenderCategoryGrid(){
+  const grid = document.getElementById('hqCatGrid');
+  grid.innerHTML = Object.entries(HQ_CATEGORIES).map(([key,c])=>`
+    <div class="cattile ${hqSelectedCategories.has(key)?'active':''}" data-cat="${key}">
+      <span class="caticon">${c.icon}</span>${c.label}
+    </div>`).join('');
+  grid.querySelectorAll('.cattile').forEach(el=>{
+    bindTap(el, ()=>{
+      const key = el.dataset.cat;
+      if(hqSelectedCategories.has(key)){
+        if(hqSelectedCategories.size > 1) hqSelectedCategories.delete(key);
+      } else {
+        hqSelectedCategories.add(key);
+      }
+      hqRenderCategoryGrid();
+    });
+  });
+}
+
+document.querySelectorAll('.hqdiffbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    hqSelectedDifficulty = btn.dataset.diff;
+    document.querySelectorAll('.hqdiffbtn').forEach(b=>b.classList.toggle('active', b===btn));
+  });
+});
+document.querySelectorAll('.hqhsbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    hqSelectedHeadstartSeconds = Number(btn.dataset.hs);
+    document.querySelectorAll('.hqhsbtn').forEach(b=>b.classList.toggle('active', b===btn));
+  });
+});
+document.getElementById('hqReadAloudToggle').addEventListener('change', function(){ hqReadAloudEnabled = this.checked; });
+
+function hqSpeakText(text){
+  if(!('speechSynthesis' in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'fr-CA';
+    utter.rate = 0.95;
+    speechSynthesis.speak(utter);
+  }catch(e){}
+}
+document.getElementById('hqSpeakBtn').addEventListener('click', ()=>{
+  const qi = hqRoomData.currentQuestion;
+  const q = HQ_QUESTIONS[hqRoomData.questionOrder[qi]];
+  if(q) hqSpeakText(`${q.q} Les choix sont : ${q.a.join(', ')}`);
+});
+
+document.getElementById('hqStartBtn').addEventListener('click', ()=>{
+  if(!hqAmHost) return;
+  const pool = HQ_QUESTIONS
+    .map((q,i)=>({q,i}))
+    .filter(({q})=> hqSelectedCategories.has(q.category) && (hqSelectedDifficulty==='mixte' || q.difficulty===hqSelectedDifficulty));
+  const indices = pool.length ? pool.map(p=>p.i) : HQ_QUESTIONS.map((_,i)=>i);
+  const order = shuffle(indices).slice(0, Math.min(12, indices.length));
+  const players = hqRoomData.players || {};
+  const anyYoungChild = Object.values(players).some(p=>p.isYoungChild);
+  const headStartMs = anyYoungChild ? hqSelectedHeadstartSeconds * 1000 : 0;
+  hqRoomRef.update({ status:'playing', currentQuestion:0, questionStartedAt: Date.now(), questionOrder: order, headStartMs });
+});
+document.getElementById('hqLeaveLobbyBtn').addEventListener('click', hqLeaveRoom);
+
+function hqRenderQuestion(){
+  const qi = hqRoomData.currentQuestion;
+  if(qi !== hqLastRenderedQuestion){
+    hqLastRenderedQuestion = qi;
+    hqHasAnsweredCurrent = false;
+    document.getElementById('hqAnsweredWait').style.display = 'none';
+    clearTimeout(hqHeadstartTimer);
+    const baseStart = hqRoomData.questionStartedAt || Date.now();
+    const delay = hqIsYoungChild ? 0 : (hqRoomData.headStartMs || 0);
+    hqRevealTime = baseStart + delay;
+  }
+
+  hqShowView('question');
+  const now = Date.now();
+  if(now < hqRevealTime){
+    document.getElementById('hqHeadstartWait').style.display = 'block';
+    document.getElementById('hqQuestionContent').style.display = 'none';
+    document.getElementById('hqHeadstartText').textContent = hqIsYoungChild
+      ? "C'est ton tour de voir la question en premier!"
+      : "Un instant… un joueur plus jeune répond en premier.";
+    clearTimeout(hqHeadstartTimer);
+    hqHeadstartTimer = setTimeout(hqRenderQuestion, Math.max(50, hqRevealTime - now + 30));
+    return;
+  }
+
+  document.getElementById('hqHeadstartWait').style.display = 'none';
+  document.getElementById('hqQuestionContent').style.display = '';
+
+  const total = (hqRoomData.questionOrder && hqRoomData.questionOrder.length) || HQ_QUESTIONS.length;
+  const q = HQ_QUESTIONS[hqRoomData.questionOrder[qi]];
+  document.getElementById('hqQCounter').textContent = `Question ${qi+1}/${total}`;
+  document.getElementById('hqQText').textContent = q.q;
+
+  if(qi !== hqLastRevealedQuestion){
+    hqLastRevealedQuestion = qi;
+    if(hqReadAloudEnabled) hqSpeakText(`${q.q} Les choix sont : ${q.a.join(', ')}`);
+  }
+
+  if(!hqHasAnsweredCurrent){
+    const grid = document.getElementById('hqAnswersGrid');
+    const letters = ['a','b','c','d'];
+    grid.innerHTML = q.a.map((txt,i)=>`<button class="answerbtn ${letters[i]}" data-idx="${i}">${txt}</button>`).join('');
+    grid.style.display = '';
+    document.getElementById('hqAnsweredWait').style.display = 'none';
+    grid.querySelectorAll('.answerbtn').forEach(btn=>{
+      bindTap(btn, ()=> hqSubmitAnswer(Number(btn.dataset.idx), q));
+    });
+    hqStartTimer(q);
+  }
+}
+
+function hqStartTimer(q){
+  clearInterval(hqQuestionTimer);
+  const fill = document.getElementById('hqTimerFill');
+  const startedAt = hqRevealTime || Date.now();
+  hqQuestionTimer = setInterval(()=>{
+    const elapsed = Date.now() - startedAt;
+    const pct = Math.max(0, 100 - (elapsed / HQ_QUESTION_TIME_MS) * 100);
+    fill.style.width = pct + '%';
+    if(elapsed >= HQ_QUESTION_TIME_MS){
+      clearInterval(hqQuestionTimer);
+      if(!hqHasAnsweredCurrent) hqSubmitAnswer(-1, q);
+    }
+  }, 100);
+}
+
+function hqSubmitAnswer(choiceIdx, q){
+  if(hqHasAnsweredCurrent) return;
+  hqHasAnsweredCurrent = true;
+  clearInterval(hqQuestionTimer);
+  const elapsed = Date.now() - (hqRevealTime || Date.now());
+  const correct = choiceIdx === q.correct;
+  let points = 0;
+  if(correct){
+    const speedBonus = Math.round(100 * Math.max(0, (HQ_QUESTION_TIME_MS - elapsed)) / HQ_QUESTION_TIME_MS);
+    points = 100 + speedBonus;
+  }
+
+  document.querySelectorAll('#hqAnswersGrid .answerbtn').forEach((btn,i)=>{
+    btn.disabled = true;
+    if(i === q.correct) btn.classList.add('correct');
+    else if(i === choiceIdx) btn.classList.add('wrong');
+  });
+
+  const myScoreRef = fbDb.ref(HQ_ROOM_PREFIX + hqRoomCode + '/players/' + hqPlayerId);
+  myScoreRef.get().then(snap=>{
+    const cur = (snap.val() && snap.val().score) || 0;
+    myScoreRef.update({ score: cur + points });
+  });
+
+  setTimeout(()=>{ hqShowResultScreen(correct, points); }, 900);
+}
+
+function hqShowResultScreen(correct, points){
+  hqShowView('result');
+  const box = document.getElementById('hqResultBox');
+  box.style.background = correct ? '#1E5B3A' : '#4A2416';
+  document.getElementById('hqResultTitle').textContent = correct ? 'Bonne réponse! ✅' : 'Pas tout à fait… ❌';
+  document.getElementById('hqResultSub').textContent = correct ? `+${points} points` : 'Aucun point cette fois.';
+
+  const players = hqRoomData.players || {};
+  const sorted = Object.entries(players).sort((a,b)=> (b[1].score||0) - (a[1].score||0));
+  document.getElementById('hqLiveScores').innerHTML = sorted.map(([pid,p])=>`
+    <div class="playerrow">
+      <span class="pname">${p.name}${pid===hqPlayerId?' (toi)':''}</span>
+      <span class="pscore">${p.score||0}</span>
+    </div>`).join('');
+
+  document.getElementById('hqHostNextPanel').style.display = hqAmHost ? '' : 'none';
+}
+
+document.getElementById('hqNextBtn').addEventListener('click', ()=>{
+  if(!hqAmHost) return;
+  const total = hqRoomData.questionOrder.length;
+  const next = hqRoomData.currentQuestion + 1;
+  if(next >= total){
+    hqRoomRef.update({ status:'finished' });
+  } else {
+    hqRoomRef.update({ currentQuestion: next, questionStartedAt: Date.now() });
+  }
+});
+
+function hqRenderFinal(){
+  hqShowView('final');
+  const players = hqRoomData.players || {};
+  const sorted = Object.entries(players).sort((a,b)=> (b[1].score||0) - (a[1].score||0));
+  document.getElementById('hqFinalLeaderboard').innerHTML = sorted.map(([pid,p],i)=>`
+    <div class="leaderrow ${i===0?'first':''}">
+      <span class="rank">#${i+1}</span>
+      <span class="lname">${p.name}${pid===hqPlayerId?' (toi)':''}</span>
+      <span class="lscore">${p.score||0}</span>
+    </div>`).join('');
+
+  if(!window.__hqCoinsAwarded){
+    window.__hqCoinsAwarded = true;
+    const myRank = sorted.findIndex(([pid])=>pid===hqPlayerId);
+    addCoins(myRank === 0 ? 30 : 10);
+  }
+}
+
+document.getElementById('hqPlayAgainBtn').addEventListener('click', ()=>{
+  window.__hqCoinsAwarded = false;
+  hqLeaveRoom();
+});
+
+function hqLeaveRoom(){
+  if(hqRoomRef) hqRoomRef.off();
+  if(hqAmHost && hqRoomRef) hqRoomRef.remove();
+  hqRoomRef = null; hqRoomData = null; hqRoomCode = null; hqPlayerId = null; hqAmHost = false;
+  hqLastRenderedQuestion = -1;
+  hqLastRevealedQuestion = -1;
+  clearTimeout(hqHeadstartTimer);
+  hqRevealTime = 0;
+  document.getElementById('hqLobbyError').style.display = 'none';
+  document.getElementById('hqJoinCodeInput').value = '';
+  hqShowView('lobby');
+}
 
 async function init(){
   await loadRemoteContent();
